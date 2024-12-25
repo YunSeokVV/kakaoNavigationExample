@@ -1,60 +1,29 @@
 package com.example.findloadsampleproject
 
-import android.graphics.Color
+import android.location.Location
 import android.os.Bundle
 import android.util.Log
-import android.view.View
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.example.findloadsampleproject.databinding.ActivityNaviBinding
 
-import com.kakaomobility.knsdk.KNCarFuel
-import com.kakaomobility.knsdk.KNCarType
-import com.kakaomobility.knsdk.KNCarUsage
 import com.kakaomobility.knsdk.KNRouteAvoidOption
 import com.kakaomobility.knsdk.KNRoutePriority
 import com.kakaomobility.knsdk.KNSDK
-import com.kakaomobility.knsdk.KNSDK.completion
 import com.kakaomobility.knsdk.common.gps.KATECToWGS84
 import com.kakaomobility.knsdk.common.gps.KNGPSData
 import com.kakaomobility.knsdk.common.gps.KNGPSReceiver
-import com.kakaomobility.knsdk.common.gps.KN_DEFAULT_POS_X
-import com.kakaomobility.knsdk.common.gps.KN_DEFAULT_POS_Y
+import com.kakaomobility.knsdk.common.gps.KNLocationReceiver
 import com.kakaomobility.knsdk.common.gps.WGS84ToKATEC
-import com.kakaomobility.knsdk.common.objects.KNError
 import com.kakaomobility.knsdk.common.objects.KNPOI
-import com.kakaomobility.knsdk.common.util.DoublePoint
-import com.kakaomobility.knsdk.common.util.FloatPoint
-import com.kakaomobility.knsdk.common.util.IntPoint
-//import com.kakaomobility.knsdk.guidance.knguidance.KNDriveGuidance
 import com.kakaomobility.knsdk.guidance.knguidance.KNGuidance
-import com.kakaomobility.knsdk.guidance.knguidance.KNGuidance_CitsGuideDelegate
-import com.kakaomobility.knsdk.guidance.knguidance.KNGuidance_GuideStateDelegate
 import com.kakaomobility.knsdk.guidance.knguidance.KNGuidance_LocationGuideDelegate
-import com.kakaomobility.knsdk.guidance.knguidance.KNGuidance_RouteGuideDelegate
-import com.kakaomobility.knsdk.guidance.knguidance.KNGuideRouteChangeReason
-import com.kakaomobility.knsdk.guidance.knguidance.KNGuidance_SafetyGuideDelegate
-import com.kakaomobility.knsdk.guidance.knguidance.KNGuidance_VoiceGuideDelegate
-import com.kakaomobility.knsdk.guidance.knguidance.citsguide.KNGuide_Cits
+//import com.kakaomobility.knsdk.guidance.knguidance.KNDriveGuidance
 import com.kakaomobility.knsdk.guidance.knguidance.common.KNLocation
 import com.kakaomobility.knsdk.guidance.knguidance.locationguide.KNGuide_Location
-import com.kakaomobility.knsdk.guidance.knguidance.routeguide.KNGuide_Route
-import com.kakaomobility.knsdk.guidance.knguidance.routeguide.objects.KNMultiRouteInfo
-import com.kakaomobility.knsdk.guidance.knguidance.safetyguide.KNGuide_Safety
-import com.kakaomobility.knsdk.guidance.knguidance.safetyguide.objects.KNSafety
-import com.kakaomobility.knsdk.guidance.knguidance.voiceguide.KNGuide_Voice
+import com.kakaomobility.knsdk.guidance.knguidance.routeguide.objects.KNRoadInfo
 import com.kakaomobility.knsdk.map.knmaprenderer.objects.KNMapCameraUpdate
-import com.kakaomobility.knsdk.map.knmaprenderer.objects.KNMapCoordinateRegion
 import com.kakaomobility.knsdk.map.knmapview.KNMapView
-import com.kakaomobility.knsdk.map.knmapview.idl.KNMapViewEventListener
-import com.kakaomobility.knsdk.map.uicustomsupport.renewal.theme.base.KNMapTheme
-import com.kakaomobility.knsdk.trip.knrouteconfiguration.KNRouteConfiguration
-import com.kakaomobility.knsdk.trip.kntrip.KNTrip
-import com.kakaomobility.knsdk.trip.kntrip.knroute.KNRoute
-import com.kakaomobility.knsdk.ui.component.MapViewCameraMode
-import okhttp3.logging.HttpLoggingInterceptor.Logger
-import kotlin.math.roundToInt
 
 class NaviActivity : AppCompatActivity()
     //, KNGuidance_LocationGuideDelegate, KNGuidance_RouteGuideDelegate
@@ -90,7 +59,7 @@ class NaviActivity : AppCompatActivity()
 
         requestRoute()
 
-        setTBT()
+        //setTBT()
     }
 
     private fun initMapView(mapView: KNMapView) {
@@ -110,21 +79,36 @@ class NaviActivity : AppCompatActivity()
         FindLoadApplication.knsdk.requestLocationUpdate(delegate = object : KNGPSReceiver {
             override fun didReceiveGpsData(aGpsData: KNGPSData) {
                 flag = false
-
+                aGpsData
                 var currentLocWGS = KATECToWGS84(aGpsData.pos.x, aGpsData.pos.y)
                 val currentLocKATEC = WGS84ToKATEC(currentLocWGS.x ,currentLocWGS.y)
 
-                Log.v(TAG, "currentLocKATEC is x ${currentLocKATEC.x} y ${currentLocKATEC.y}")
+                //Log.v(TAG, "currentLocKATEC is x ${currentLocKATEC.x} y ${currentLocKATEC.y}")
                 binding.mapView.userLocation?.apply {
                     isVisible = true
                     isVisibleGuideLine = true
                     coordinate = currentLocKATEC.toFloatPoint()
                 }
 
+                cullingRouteWithMapView()
+
                 // 현재 위치를 토스트메세지로 확인
                 //Toast.makeText(this@NaviActivity, "x ${currentLocKATEC.x} \ny ${currentLocKATEC.y}",Toast.LENGTH_LONG).show()
             }
         })
+    }
+
+    // 입력받은 사용자의 위치 정보를 통해 사용자가 지나간 경로 부분을 자릅니다.
+    // https://developers.kakaomobility.com/docs/android-ref-kotlin/class-KNMapView/
+    fun cullingRouteWithMapView() {
+        FindLoadApplication.knsdk.sharedGuidance()?.locationGuideDelegate = object : KNGuidance_LocationGuideDelegate {
+            override fun guidanceDidUpdateLocation(
+                aGuidance: KNGuidance,
+                aLocationGuide: KNGuide_Location
+            ) {
+                aLocationGuide.location?.let { binding.mapView.cullPassedRoute(it, true) }
+            }
+        }
     }
 
 
@@ -165,6 +149,8 @@ class NaviActivity : AppCompatActivity()
 
                             if (routes != null) {
                                 binding.mapView.setRoutes(routes.toList())
+
+                                setTBT()
 
                                 FindLoadApplication.knsdk.sharedGuidance()?.startWithTrip(aTrip, KNRoutePriority.KNRoutePriority_Time, KNRouteAvoidOption.KNRouteAvoidOption_RoadEvent.value)
 
