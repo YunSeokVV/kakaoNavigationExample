@@ -96,12 +96,12 @@ class KNNaviView : AppCompatActivity(),
     fun startGuide(trip: KNTrip?) {
         FindLoadApplication.knsdk.sharedGuidance()?.apply {
             // guidance delegate 등록
-            guideStateDelegate = this@KNNaviView
-            locationGuideDelegate = this@KNNaviView
-            routeGuideDelegate = this@KNNaviView
-            safetyGuideDelegate = this@KNNaviView
+            guideStateDelegate = this@KNNaviView        // 가이던스의 상태를 나타내는 델리게이트로 주행 중 안내 상태가 변경될 때 호출.
+            locationGuideDelegate = this@KNNaviView     // 위치를 나타내는 델리게이트로 주행 중 안내 위치가 변경될 때 호출.
+            routeGuideDelegate = this@KNNaviView        // 경로를 안내하는 델리게이트로 주행 중 경로 안내 정보가 변경될 때 호출
+            safetyGuideDelegate = this@KNNaviView       // 안전 운행 델리게이트로 안전 운행 정보가 변경될 때 호출
             voiceGuideDelegate = this@KNNaviView
-            citsGuideDelegate = this@KNNaviView
+            citsGuideDelegate = this@KNNaviView         // C-ITS(Cooperative-Intelligent Transport Systems, 협력 지능형 교통 체계)의 정보가 변경되면 호출
 
             binding.naviView.initWithGuidance(
                 this,

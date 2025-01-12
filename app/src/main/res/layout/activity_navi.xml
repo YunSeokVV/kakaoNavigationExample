@@ -20,4 +20,14 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
+    <Button
+        android:id="@+id/mockPlay"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="15dp"
+        android:text="모의주행"
+        android:layout_marginBottom="15dp"
+        app:layout_constraintBottom_toTopOf="@+id/userPOV"
+        app:layout_constraintEnd_toEndOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
