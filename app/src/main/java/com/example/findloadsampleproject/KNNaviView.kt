@@ -2,15 +2,20 @@ package com.example.findloadsampleproject
 
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.example.findloadsampleproject.databinding.ActivityKnnaviViewBinding
 import com.example.findloadsampleproject.databinding.ActivityNaviBinding
+import com.kakaomobility.knsdk.KNCarFuel
+import com.kakaomobility.knsdk.KNCarType
+import com.kakaomobility.knsdk.KNCarUsage
 import com.kakaomobility.knsdk.KNDisplayType
 import com.kakaomobility.knsdk.KNRouteAvoidOption
 import com.kakaomobility.knsdk.KNRoutePriority
+import com.kakaomobility.knsdk.common.gps.KATECToWGS84
 import com.kakaomobility.knsdk.common.gps.WGS84ToKATEC
 import com.kakaomobility.knsdk.common.objects.KNError
 import com.kakaomobility.knsdk.common.objects.KNPOI
@@ -30,6 +35,7 @@ import com.kakaomobility.knsdk.guidance.knguidance.routeguide.objects.KNMultiRou
 import com.kakaomobility.knsdk.guidance.knguidance.safetyguide.KNGuide_Safety
 import com.kakaomobility.knsdk.guidance.knguidance.safetyguide.objects.KNSafety
 import com.kakaomobility.knsdk.guidance.knguidance.voiceguide.KNGuide_Voice
+import com.kakaomobility.knsdk.trip.knrouteconfiguration.KNRouteConfiguration
 import com.kakaomobility.knsdk.trip.kntrip.KNTrip
 import com.kakaomobility.knsdk.trip.kntrip.knroute.KNRoute
 import com.kakaomobility.knsdk.ui.view.KNNaviViewState
@@ -49,6 +55,11 @@ class KNNaviView : AppCompatActivity(),
         setContentView(binding.root)
         
         requestRoute()
+
+        binding.mockPlay.setOnClickListener {
+            startMockDrive()
+        }
+
     }
 
     fun requestRoute() {
@@ -115,6 +126,73 @@ class KNNaviView : AppCompatActivity(),
         }
     }
 
+    // 모의주행 실행함수
+    private fun startMockDrive() {
+        val x = FindLoadApplication.knsdk.sharedGpsManager()?.recentGpsData?.pos?.x ?: 0.0
+        val y = FindLoadApplication.knsdk.sharedGpsManager()?.recentGpsData?.pos?.y ?: 0.0
+        var currentLocWGS = KATECToWGS84(x, y)
+
+        // 예시 목적지는 서울역
+        val goalKatec = WGS84ToKATEC(126.972263, 37.556091)
+        val startKatec = WGS84ToKATEC(currentLocWGS.x, currentLocWGS.y)
+
+        // 출발지와 목적지를 설정합니다.
+        val startPoi = KNPOI("현위치", startKatec.x.toInt(),startKatec.y.toInt(),"현위치")
+        val goalPoi = KNPOI("목적지",goalKatec.x.toInt(),goalKatec.y.toInt(),"목적지")
+
+        FindLoadApplication.knsdk.makeTripWithStart(startPoi, goalPoi, null) { mockDriveError, mockTrip ->
+            if(mockDriveError != null) {
+                Log.v(TAG, "mockDriveError msg : ${mockDriveError.msg} code : ${mockDriveError.code}")
+            } else {
+
+                // 속도
+                val speed = 70
+
+                // 경로 옵션
+                val routeConfig = KNRouteConfiguration(
+                    aCarType = KNCarType.KNCarType_2,   // 2종 중형차
+                    aFuel = KNCarFuel.KNCarFuel_Gasoline,
+                    aUsage = KNCarUsage.KNCarUsage_Default,
+                    aUseHipass = true,
+                    aCarWidth = -1,
+                    aCarHeight = -1,
+                    aCarLength = -1,
+                    aCarWeight = -1,
+                )
+
+                FindLoadApplication.knsdk.sharedGpsManager()?.simulationFromStart(
+                    aStart = mockTrip!!.start,
+                    aGoal = mockTrip!!.goal,
+                    aVias = null,
+                    aPriority = KNRoutePriority.KNRoutePriority_Recommand,  // 추천 경로를 기반으로 목적지까지 경로 안내
+                    aAvoidOptions = 0,  // KNRouteAvoidOption_None 경로에서 회피 구간 없음으로 설정
+                    aRouteConfig = routeConfig,
+                    aMaxSpd = speed,
+                    aUseSamePace = true
+                )
+
+            }
+        }
+
+
+
+//        // [주행정지]
+//        binding.btnFakeDriveStop.setOnClickListener {
+//            // routeEnd()
+//            DrtApplication.knsdk.sharedGuidance()?.stop()
+//            return@setOnClickListener
+//        }
+//
+//        // [주행재개]
+//        binding.btnFakeDriveResume.setOnClickListener {
+//            viewModel.dispatchPathInfo()
+//            return@setOnClickListener
+//        }
+
+
+    }
+
+
     override fun guidanceCheckingRouteChange(aGuidance: KNGuidance) {
         binding.naviView.guidanceCheckingRouteChange(aGuidance)
     }
@@ -167,6 +245,9 @@ class KNNaviView : AppCompatActivity(),
         aGuidance: KNGuidance,
         aLocationGuide: KNGuide_Location
     ) {
+        val bearing = aLocationGuide.gpsOrigin.angle
+        Toast.makeText(this, "${bearing.toString()}", Toast.LENGTH_LONG).show()
+        Log.v(TAG, "current bearing is ${bearing}")
         binding.naviView.guidanceDidUpdateLocation(aGuidance, aLocationGuide)
     }
 
