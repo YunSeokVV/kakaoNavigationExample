@@ -26,6 +26,7 @@ import com.kakaomobility.knsdk.common.gps.KNLocationReceiver
 import com.kakaomobility.knsdk.common.gps.WGS84ToKATEC
 import com.kakaomobility.knsdk.common.objects.KNError
 import com.kakaomobility.knsdk.common.objects.KNPOI
+import com.kakaomobility.knsdk.common.util.DoublePoint
 import com.kakaomobility.knsdk.common.util.FloatPoint
 import com.kakaomobility.knsdk.common.util.IntPoint
 import com.kakaomobility.knsdk.guidance.knguidance.KNGuidance
@@ -62,6 +63,8 @@ class NaviActivity : AppCompatActivity()
     // 현재 사용자의 시점이 1인칭인지 3인칭인지 판별해주는 변수
     //var userPOV = 3
 
+    lateinit var currentGPSData: DoublePoint
+
     var userPOV = MutableLiveData<Int>(1)
 
     val TAG = "NaviActivity"
@@ -80,6 +83,9 @@ class NaviActivity : AppCompatActivity()
         binding.mockPlay.setOnClickListener {
             startMockDrive()
         }
+
+        initMapEventListener()
+
     }
 
     private fun initMapEventListener() {
@@ -123,6 +129,14 @@ class NaviActivity : AppCompatActivity()
                 Log.v(TAG, "onCameraAnimationEnded")
                 // check point
                 //setCurrentTBT()
+
+                binding.mapView.userLocation?.apply {
+                    isVisible = true
+                    isVisibleGuideLine = true
+                    // 사용자 TBT위치 설정
+                    coordinate = currentGPSData.toFloatPoint()
+                }
+
             }
 
             override fun onDoubleTapped(
@@ -242,13 +256,8 @@ class NaviActivity : AppCompatActivity()
         var currentLocWGS = aGpsData?.pos?.let { KATECToWGS84(it.x, aGpsData.pos.y) }
         val currentLocKATEC = currentLocWGS?.let { WGS84ToKATEC(it.x ,currentLocWGS.y) }
 
-        binding.mapView.userLocation?.apply {
-            isVisible = true
-            isVisibleGuideLine = true
-            if (currentLocKATEC != null) {
-                // 사용자 TBT위치 설정
-                coordinate = currentLocKATEC.toFloatPoint()
-            }
+        if (currentLocKATEC != null) {
+            currentGPSData = currentLocKATEC
         }
 
         val bearing = aGpsData?.angle ?: 0
