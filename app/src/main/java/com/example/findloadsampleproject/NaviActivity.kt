@@ -57,20 +57,15 @@ import com.kakaomobility.knsdk.map.uicustomsupport.renewal.KNMapMarker
 import com.kakaomobility.knsdk.trip.knrouteconfiguration.KNRouteConfiguration
 import com.kakaomobility.knsdk.trip.kntrip.knroute.KNRoute
 
-class NaviActivity : AppCompatActivity()
-    //, KNGuidance_LocationGuideDelegate, KNGuidance_RouteGuideDelegate
-{
-    // 현재 사용자의 시점이 1인칭인지 3인칭인지 판별해주는 변수
-    //var userPOV = 3
-
+class NaviActivity : AppCompatActivity() {
     lateinit var currentGPSData: DoublePoint
 
-    var userPOV = MutableLiveData<Int>(1)
+    // 현재 사용자의 시점이 1인칭인지 3인칭인지 판별해주는 변수
+    var _userPOV = MutableLiveData<Int>(1)
+    val userPOV :LiveData<Int>  = _userPOV
 
     val TAG = "NaviActivity"
     private lateinit var binding : ActivityNaviBinding
-    //private lateinit var guidance: KNDriveGuidance
-    //lateinit var mapView: KNMapView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -85,6 +80,21 @@ class NaviActivity : AppCompatActivity()
         }
 
         initMapEventListener()
+        userPOV.observe(this, { POV ->
+            binding.userPOV.setText("${POV}인칭 시점")
+            if(POV == 1) {
+                // 1인칭 시점인 경우
+                binding.btnCurrentLocation.visibility = View.GONE
+            } else if(POV == 3) {
+                // 3인칭 시점인 경우
+                binding.btnCurrentLocation.visibility = View.VISIBLE
+            }
+        })
+
+        // 1인칭 시점으로 다시 전환
+        binding.btnCurrentLocation.setOnClickListener {
+            _userPOV.value = 1
+        }
 
     }
 
@@ -125,10 +135,7 @@ class NaviActivity : AppCompatActivity()
                 mapView: KNMapView?,
                 cameraUpdate: KNMapCameraUpdate?
             ) {
-                //makeToastMessage()
-                Log.v(TAG, "onCameraAnimationEnded")
-                // check point
-                //setCurrentTBT()
+                //Log.v(TAG, "onCameraAnimationEnded")
 
                 binding.mapView.userLocation?.apply {
                     isVisible = true
@@ -155,12 +162,15 @@ class NaviActivity : AppCompatActivity()
                 val tmp = 3
             }
 
+            // panning은 지도를 손가락으로 드래그하거나 화면에서 스와이프하여 지도 뷰를 이동시키는 동작을 의미합니다.
             override fun onPanningChanging(
                 mapView: KNMapView?,
                 screenPoint: IntPoint,
                 coordinate: FloatPoint
             ) {
-                val tmp = 3
+                // 현재 시점을 3인칭으로 바꿈
+                _userPOV.value = 3
+                Log.v(TAG, "onPanningChanging called")
             }
 
             override fun onPanningEnded(
@@ -168,7 +178,7 @@ class NaviActivity : AppCompatActivity()
                 screenPoint: IntPoint,
                 coordinate: FloatPoint
             ) {
-                val tmp = 3
+                Log.v(TAG, "onPanningEnded called")
             }
 
             override fun onPanningStarted(
@@ -176,7 +186,7 @@ class NaviActivity : AppCompatActivity()
                 screenPoint: IntPoint,
                 coordinate: FloatPoint
             ) {
-                val tmp = 3
+                Log.v(TAG, "onPanningStarted called")
             }
 
             override fun onSingleTapped(
@@ -204,7 +214,9 @@ class NaviActivity : AppCompatActivity()
                 screenPoint: IntPoint,
                 zoom: Float
             ) {
-                val tmp = 3
+                // 현재 시점을 3인칭으로 바꿈
+                _userPOV.value = 3
+                Log.v(TAG, "onZoomingChanging called")
             }
 
             override fun onZoomingEnded(mapView: KNMapView?, screenPoint: IntPoint, zoom: Float) {
@@ -228,13 +240,10 @@ class NaviActivity : AppCompatActivity()
         val x = FindLoadApplication.knsdk.sharedGpsManager()?.recentGpsData?.pos?.x ?: 0.0
         val y = FindLoadApplication.knsdk.sharedGpsManager()?.recentGpsData?.pos?.y ?: 0.0
 
-        // todo : 정말 KNSDK에서 이해가 안되는 부분이다. 최근위치 좌표를 WGS84 -> KATEC 으로 변환시키고 사용해야 한다.
         var currentLocWGS = KATECToWGS84(x, y)
         val currentLocKATEC = WGS84ToKATEC(currentLocWGS.x ,currentLocWGS.y)
-        //val currentLocKATEC = WGS84ToKATEC(127.109685651985,37.39385204911604)
         binding.mapView.moveCamera(KNMapCameraUpdate.targetTo(currentLocKATEC.toFloatPoint()).zoomTo(2.5f).tiltTo(0f), false, false)
 
-        //setTBT()
     }
 
     private fun initMapView(mapView: KNMapView) {
@@ -245,7 +254,6 @@ class NaviActivity : AppCompatActivity()
                 return@bindingMapView
             }
 
-            //bearing45WithMoveMap(false, false)
             setCameraCurrentLocation()
             requestRoute()
         }
@@ -263,20 +271,6 @@ class NaviActivity : AppCompatActivity()
         val bearing = aGpsData?.angle ?: 0
         rotate(bearing, aGpsData)
     }
-
-    // 입력받은 사용자의 위치 정보를 통해 사용자가 지나간 경로 부분을 자릅니다.
-    // https://developers.kakaomobility.com/docs/android-ref-kotlin/class-KNMapView/
-    fun cullingRouteWithMapView() {
-        FindLoadApplication.knsdk.sharedGuidance()?.locationGuideDelegate = object : KNGuidance_LocationGuideDelegate {
-            override fun guidanceDidUpdateLocation(
-                aGuidance: KNGuidance,
-                aLocationGuide: KNGuide_Location
-            ) {
-                aLocationGuide.location?.let { binding.mapView.cullPassedRoute(it, true) }
-            }
-        }
-    }
-
 
     fun requestRoute() {
 
@@ -339,10 +333,10 @@ class NaviActivity : AppCompatActivity()
                                             aRoute: KNRoute?
                                         ) {
                                             Log.v(TAG, "guidanceDidUpdateIndoorRoute")
-                                            aGuidance.locationGuide?.location?.let {
-                                                binding.mapView.cullPassedRoute(it, true)
-                                            }
-                                            setTBT(aGuidance.locationGuide?.gpsMatched)
+//                                            aGuidance.locationGuide?.location?.let {
+//                                                binding.mapView.cullPassedRoute(it, true)
+//                                            }
+//                                            setTBT(aGuidance.locationGuide?.gpsMatched)
                                             //setCamera(aGuidance.locationGuide?.gpsMatched)
                                         }
 
@@ -357,12 +351,12 @@ class NaviActivity : AppCompatActivity()
                                                 binding.mapView.cullPassedRoute(it, true)
                                             }
                                             setTBT(aGuidance.locationGuide?.gpsMatched)
-                                            aRoutes.map { knRoute ->
-                                                knRoute.mainDirectionList().map {knDirection ->
-
-                                                    knDirection.location.pos.toFloatPoint()
-                                                }
-                                            }
+//                                            aRoutes.map { knRoute ->
+//                                                knRoute.mainDirectionList().map {knDirection ->
+//
+//                                                    knDirection.location.pos.toFloatPoint()
+//                                                }
+//                                            }
                                             //setCamera(aGuidance.locationGuide?.gpsMatched)
                                         }
 
@@ -372,7 +366,7 @@ class NaviActivity : AppCompatActivity()
                                             aGuidance.locationGuide?.location?.let {
                                                 binding.mapView.cullPassedRoute(it, true)
                                             }
-                                            setTBT(aGuidance.locationGuide?.gpsMatched)
+                                            //setTBT(aGuidance.locationGuide?.gpsMatched)
                                             //setCamera(aGuidance.locationGuide?.gpsMatched)
                                         }
 
@@ -605,7 +599,7 @@ class NaviActivity : AppCompatActivity()
     private fun rotate(bearing : Int, aGpsData : KNGPSData?) {
         var currentLocWGS = aGpsData?.pos?.let { KATECToWGS84(it.x, aGpsData.pos.y) }
         val currentLocKATEC = currentLocWGS?.let { WGS84ToKATEC(it.x ,currentLocWGS.y) }
-        Log.v(TAG, "rotated bearing is ${bearing.toString()}")
+        //Log.v(TAG, "rotated bearing is ${bearing.toString()}")
         if (currentLocKATEC != null) {
             binding.mapView.animateCamera(KNMapCameraUpdate.bearingTo(bearing.toFloat()).targetTo(currentLocKATEC.toFloatPoint()), 500, true, false)
         }
