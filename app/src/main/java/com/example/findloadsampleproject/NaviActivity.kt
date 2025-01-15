@@ -38,7 +38,7 @@ import com.kakaomobility.knsdk.guidance.knguidance.KNGuidance_SafetyGuideDelegat
 import com.kakaomobility.knsdk.guidance.knguidance.KNGuidance_VoiceGuideDelegate
 import com.kakaomobility.knsdk.guidance.knguidance.KNGuideRouteChangeReason
 import com.kakaomobility.knsdk.guidance.knguidance.citsguide.KNGuide_Cits
-//import com.kakaomobility.knsdk.guidance.knguidance.KNDriveGuidance
+import com.kakaomobility.knsdk.guidance.knguidance.KNDriveGuidance
 import com.kakaomobility.knsdk.guidance.knguidance.common.KNLocation
 import com.kakaomobility.knsdk.guidance.knguidance.locationguide.KNGuide_Location
 import com.kakaomobility.knsdk.guidance.knguidance.routeguide.KNGuide_Route
@@ -57,20 +57,13 @@ import com.kakaomobility.knsdk.map.uicustomsupport.renewal.KNMapMarker
 import com.kakaomobility.knsdk.trip.knrouteconfiguration.KNRouteConfiguration
 import com.kakaomobility.knsdk.trip.kntrip.knroute.KNRoute
 
-class NaviActivity : AppCompatActivity()
-    //, KNGuidance_LocationGuideDelegate, KNGuidance_RouteGuideDelegate
-{
+class NaviActivity : AppCompatActivity() {
     // 현재 사용자의 시점이 1인칭인지 3인칭인지 판별해주는 변수
-    //var userPOV = 3
-
-    lateinit var currentGPSData: DoublePoint
-
-    var userPOV = MutableLiveData<Int>(1)
+    var _userPOV = MutableLiveData<Int>(1)
+    val userPOV :LiveData<Int>  = _userPOV
 
     val TAG = "NaviActivity"
     private lateinit var binding : ActivityNaviBinding
-    //private lateinit var guidance: KNDriveGuidance
-    //lateinit var mapView: KNMapView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -85,6 +78,21 @@ class NaviActivity : AppCompatActivity()
         }
 
         initMapEventListener()
+        userPOV.observe(this, { POV ->
+            binding.userPOV.setText("${POV}인칭 시점")
+            if(POV == 1) {
+                // 1인칭 시점인 경우
+                binding.btnCurrentLocation.visibility = View.GONE
+            } else if(POV == 3) {
+                // 3인칭 시점인 경우
+                binding.btnCurrentLocation.visibility = View.VISIBLE
+            }
+        })
+
+        // 1인칭 시점으로 다시 전환
+        binding.btnCurrentLocation.setOnClickListener {
+            _userPOV.value = 1
+        }
 
     }
 
@@ -125,16 +133,13 @@ class NaviActivity : AppCompatActivity()
                 mapView: KNMapView?,
                 cameraUpdate: KNMapCameraUpdate?
             ) {
-                //makeToastMessage()
-                Log.v(TAG, "onCameraAnimationEnded")
-                // check point
-                //setCurrentTBT()
+                //Log.v(TAG, "onCameraAnimationEnded")
 
                 binding.mapView.userLocation?.apply {
                     isVisible = true
                     isVisibleGuideLine = true
-                    // 사용자 TBT위치 설정
-                    coordinate = currentGPSData.toFloatPoint()
+                    // 사용자 위치가 표시되는 카텍(KATEC) 좌표
+                    //coordinate = currentGPSData.toFloatPoint()
                 }
 
             }
@@ -155,12 +160,15 @@ class NaviActivity : AppCompatActivity()
                 val tmp = 3
             }
 
+            // panning은 지도를 손가락으로 드래그하거나 화면에서 스와이프하여 지도 뷰를 이동시키는 동작을 의미합니다.
             override fun onPanningChanging(
                 mapView: KNMapView?,
                 screenPoint: IntPoint,
                 coordinate: FloatPoint
             ) {
-                val tmp = 3
+                // 현재 시점을 3인칭으로 바꿈
+                _userPOV.value = 3
+                Log.v(TAG, "onPanningChanging called")
             }
 
             override fun onPanningEnded(
@@ -168,7 +176,7 @@ class NaviActivity : AppCompatActivity()
                 screenPoint: IntPoint,
                 coordinate: FloatPoint
             ) {
-                val tmp = 3
+                Log.v(TAG, "onPanningEnded called")
             }
 
             override fun onPanningStarted(
@@ -176,7 +184,7 @@ class NaviActivity : AppCompatActivity()
                 screenPoint: IntPoint,
                 coordinate: FloatPoint
             ) {
-                val tmp = 3
+                Log.v(TAG, "onPanningStarted called")
             }
 
             override fun onSingleTapped(
@@ -204,7 +212,9 @@ class NaviActivity : AppCompatActivity()
                 screenPoint: IntPoint,
                 zoom: Float
             ) {
-                val tmp = 3
+                // 현재 시점을 3인칭으로 바꿈
+                _userPOV.value = 3
+                Log.v(TAG, "onZoomingChanging called")
             }
 
             override fun onZoomingEnded(mapView: KNMapView?, screenPoint: IntPoint, zoom: Float) {
@@ -228,13 +238,10 @@ class NaviActivity : AppCompatActivity()
         val x = FindLoadApplication.knsdk.sharedGpsManager()?.recentGpsData?.pos?.x ?: 0.0
         val y = FindLoadApplication.knsdk.sharedGpsManager()?.recentGpsData?.pos?.y ?: 0.0
 
-        // todo : 정말 KNSDK에서 이해가 안되는 부분이다. 최근위치 좌표를 WGS84 -> KATEC 으로 변환시키고 사용해야 한다.
         var currentLocWGS = KATECToWGS84(x, y)
         val currentLocKATEC = WGS84ToKATEC(currentLocWGS.x ,currentLocWGS.y)
-        //val currentLocKATEC = WGS84ToKATEC(127.109685651985,37.39385204911604)
         binding.mapView.moveCamera(KNMapCameraUpdate.targetTo(currentLocKATEC.toFloatPoint()).zoomTo(2.5f).tiltTo(0f), false, false)
 
-        //setTBT()
     }
 
     private fun initMapView(mapView: KNMapView) {
@@ -245,7 +252,6 @@ class NaviActivity : AppCompatActivity()
                 return@bindingMapView
             }
 
-            //bearing45WithMoveMap(false, false)
             setCameraCurrentLocation()
             requestRoute()
         }
@@ -256,27 +262,10 @@ class NaviActivity : AppCompatActivity()
         var currentLocWGS = aGpsData?.pos?.let { KATECToWGS84(it.x, aGpsData.pos.y) }
         val currentLocKATEC = currentLocWGS?.let { WGS84ToKATEC(it.x ,currentLocWGS.y) }
 
-        if (currentLocKATEC != null) {
-            currentGPSData = currentLocKATEC
-        }
 
         val bearing = aGpsData?.angle ?: 0
         rotate(bearing, aGpsData)
     }
-
-    // 입력받은 사용자의 위치 정보를 통해 사용자가 지나간 경로 부분을 자릅니다.
-    // https://developers.kakaomobility.com/docs/android-ref-kotlin/class-KNMapView/
-    fun cullingRouteWithMapView() {
-        FindLoadApplication.knsdk.sharedGuidance()?.locationGuideDelegate = object : KNGuidance_LocationGuideDelegate {
-            override fun guidanceDidUpdateLocation(
-                aGuidance: KNGuidance,
-                aLocationGuide: KNGuide_Location
-            ) {
-                aLocationGuide.location?.let { binding.mapView.cullPassedRoute(it, true) }
-            }
-        }
-    }
-
 
     fun requestRoute() {
 
@@ -325,11 +314,7 @@ class NaviActivity : AppCompatActivity()
                                         // 경로의 변화를 감지합니다. 교통 변화, 경로 이탈로 인한 경로 재탐색이나 사용자가 경로를 재탐색할 때 호출됩니다.
                                         override fun guidanceCheckingRouteChange(aGuidance: KNGuidance) {
                                             Log.v(TAG, "guidanceCheckingRouteChange")
-                                            aGuidance.locationGuide?.location?.let {
-                                                binding.mapView.cullPassedRoute(it, true)
-                                            }
-                                            setTBT(aGuidance.locationGuide?.gpsMatched)
-                                            //setCamera(aGuidance.locationGuide?.gpsMatched)
+
                                         }
 
                                         // todo : 얘는 뭐 공식문서에도 없고 뭐하는 애인지 모르겠음
@@ -339,11 +324,7 @@ class NaviActivity : AppCompatActivity()
                                             aRoute: KNRoute?
                                         ) {
                                             Log.v(TAG, "guidanceDidUpdateIndoorRoute")
-                                            aGuidance.locationGuide?.location?.let {
-                                                binding.mapView.cullPassedRoute(it, true)
-                                            }
-                                            setTBT(aGuidance.locationGuide?.gpsMatched)
-                                            //setCamera(aGuidance.locationGuide?.gpsMatched)
+
                                         }
 
                                         // 기존 경로가 변경됩니다.
@@ -353,47 +334,25 @@ class NaviActivity : AppCompatActivity()
                                             aMultiRouteInfo: KNMultiRouteInfo?
                                         ) {
                                             Log.v(TAG, "guidanceDidUpdateRoutes")
-                                            aGuidance.locationGuide?.location?.let {
-                                                binding.mapView.cullPassedRoute(it, true)
-                                            }
-                                            setTBT(aGuidance.locationGuide?.gpsMatched)
-                                            aRoutes.map { knRoute ->
-                                                knRoute.mainDirectionList().map {knDirection ->
 
-                                                    knDirection.location.pos.toFloatPoint()
-                                                }
-                                            }
-                                            //setCamera(aGuidance.locationGuide?.gpsMatched)
                                         }
 
                                         // 길 안내가 종료됩니다.
                                         override fun guidanceGuideEnded(aGuidance: KNGuidance) {
                                             Log.v(TAG, "guidanceGuideEnded")
-                                            aGuidance.locationGuide?.location?.let {
-                                                binding.mapView.cullPassedRoute(it, true)
-                                            }
-                                            setTBT(aGuidance.locationGuide?.gpsMatched)
-                                            //setCamera(aGuidance.locationGuide?.gpsMatched)
+
                                         }
 
                                         // 길 안내를 시작합니다.
                                         override fun guidanceGuideStarted(aGuidance: KNGuidance) {
                                             Log.v(TAG, "guidanceGuideStarted")
-                                            aGuidance.locationGuide?.location?.let {
-                                                binding.mapView.cullPassedRoute(it, true)
-                                            }
-                                            setTBT(aGuidance.locationGuide?.gpsMatched)
-                                            //setCamera(aGuidance.locationGuide?.gpsMatched)
+
                                         }
 
                                         // 기존 경로를 이탈합니다.
                                         override fun guidanceOutOfRoute(aGuidance: KNGuidance) {
                                             Log.v(TAG, "guidanceOutOfRoute")
-                                            aGuidance.locationGuide?.location?.let {
-                                                binding.mapView.cullPassedRoute(it, true)
-                                            }
-                                            setTBT(aGuidance.locationGuide?.gpsMatched)
-                                            //setCamera(aGuidance.locationGuide?.gpsMatched)
+
                                         }
 
                                         // 경로 변경를 전달합니다. 여러 개의 경로 중 첫 번째 경로가 주행 경로이며 나머지는 대안 경로가 됩니다.
@@ -406,21 +365,14 @@ class NaviActivity : AppCompatActivity()
                                             aChangeReason: KNGuideRouteChangeReason
                                         ) {
                                             Log.v(TAG, "guidanceRouteChanged")
-                                            aGuidance.locationGuide?.location?.let {
-                                                binding.mapView.cullPassedRoute(it, true)
-                                            }
-                                            setTBT(aGuidance.locationGuide?.gpsMatched)
-                                            //setCamera(aGuidance.locationGuide?.gpsMatched)
+
                                         }
 
                                         // 기존 경로를 유지합니다. 교통 변화를 감지한 뒤 경로 변화가 없거나, 교통 상황의 변화로 요청한 새로운 경로가 기존의 경로와 동일할 경우 호출됩니다.
                                         override fun guidanceRouteUnchanged(aGuidance: KNGuidance) {
                                             Log.v(TAG, "guidanceRouteUnchanged")
-                                            aGuidance.locationGuide?.location?.let {
-                                                binding.mapView.cullPassedRoute(it, true)
-                                            }
-                                            setTBT(aGuidance.locationGuide?.gpsMatched)
-                                            //setCamera(aGuidance.locationGuide?.gpsMatched)
+
+
                                         }
 
                                         // 경로 요청에 실패 시 에러 메시지를 반환합니다.
@@ -428,13 +380,8 @@ class NaviActivity : AppCompatActivity()
                                             aGuidnace: KNGuidance,
                                             aError: KNError
                                         ) {
-                                            aGuidnace.locationGuide?.location?.let {
-                                                binding.mapView.cullPassedRoute(it, true)
-                                            }
-                                            //Toast.makeText(this, "맵 초기화 작업이 실패하였습니다. \n[${error.code}] : ${error.msg}",Toast.LENGTH_LONG).show()
-                                            //Log.v(TAG, "guidanceRouteUnchangedWithError")
-                                            setTBT(aGuidnace.locationGuide?.gpsMatched)
-                                            //setCamera(aGuidnace.locationGuide?.gpsMatched)
+
+
                                         }
 
                                         // 위치 정보를 업데이트합니다.
@@ -442,12 +389,8 @@ class NaviActivity : AppCompatActivity()
                                             aGuidance: KNGuidance,
                                             aLocationGuide: KNGuide_Location
                                         ) {
-                                            aGuidance.locationGuide?.location?.let {
-                                                binding.mapView.cullPassedRoute(it, true)
-                                            }
                                             //Log.v(TAG, "guidanceDidUpdateLocation")
-                                            setTBT(aGuidance .locationGuide?.gpsMatched)
-                                            //setCamera(aGuidance.locationGuide?.gpsMatched)
+
                                         }
                                     }
 
@@ -458,12 +401,10 @@ class NaviActivity : AppCompatActivity()
                                             aGuidance: KNGuidance,
                                             aLocationGuide: KNGuide_Location
                                         ) {
-                                            aGuidance.locationGuide?.location?.let {
-                                                binding.mapView.cullPassedRoute(it, true)
-                                            }
-                                            //Log.v(TAG, "guidanceDidUpdateLocation")
-                                            setTBT(aGuidance .locationGuide?.gpsMatched)
-                                            //setCamera(aGuidance.locationGuide?.gpsMatched)
+                                            // todo : 여기는 항상 호출된다. withUI에서 모의주행을 실행하지 않아도 계속 호출되는 곳이다.
+                                            Log.v(TAG, "guidanceDidUpdateLocation")
+                                            //currentKNGuidance = aGuidance
+
                                         }
 
                                     }
@@ -476,11 +417,7 @@ class NaviActivity : AppCompatActivity()
                                             aRouteGuide: KNGuide_Route
                                         ) {
                                             Log.v(TAG, "guidanceDidUpdateRouteGuide")
-                                            aGuidance.locationGuide?.location?.let {
-                                                binding.mapView.cullPassedRoute(it, true)
-                                            }
-                                            setTBT(aGuidance .locationGuide?.gpsMatched)
-                                            //setCamera(aGuidance.locationGuide?.gpsMatched)
+
                                         }
 
                                         override fun guidanceDidUpdateLocation(
@@ -488,11 +425,7 @@ class NaviActivity : AppCompatActivity()
                                             aLocationGuide: KNGuide_Location
                                         ) {
                                             //Log.v(TAG, "guidanceDidUpdateLocation")
-                                            aGuidance.locationGuide?.location?.let {
-                                                binding.mapView.cullPassedRoute(it, true)
-                                            }
-                                            setTBT(aGuidance .locationGuide?.gpsMatched)
-                                            //setCamera(aGuidance.locationGuide?.gpsMatched)
+
                                         }
 
                                     }
@@ -504,11 +437,7 @@ class NaviActivity : AppCompatActivity()
                                             aSafeties: List<KNSafety>?
                                         ) {
                                             Log.v(TAG, "guidanceDidUpdateAroundSafeties")
-                                            aGuidance.locationGuide?.location?.let {
-                                                binding.mapView.cullPassedRoute(it, true)
-                                            }
-                                            setTBT(aGuidance .locationGuide?.gpsMatched)
-                                            //setCamera(aGuidance.locationGuide?.gpsMatched)
+
                                         }
 
                                         // 안전 운행 정보를 업데이트합니다. safetyGuide의 항목이 1개 이상 변경 시 전달됩니다. safetyGuide의 세부 항목 중 변경이 없는 항목은 이전과 동일한 객체로 전달됩니다.
@@ -517,11 +446,7 @@ class NaviActivity : AppCompatActivity()
                                             aSafetyGuide: KNGuide_Safety?
                                         ) {
                                             Log.v(TAG, "guidanceDidUpdateSafetyGuide")
-                                            aGuidance.locationGuide?.location?.let {
-                                                binding.mapView.cullPassedRoute(it, true)
-                                            }
-                                            setTBT(aGuidance .locationGuide?.gpsMatched)
-                                            //setCamera(aGuidance.locationGuide?.gpsMatched)
+
                                         }
 
                                     }
@@ -534,11 +459,7 @@ class NaviActivity : AppCompatActivity()
                                             aVoiceGuide: KNGuide_Voice
                                         ) {
                                             Log.v(TAG, "didFinishPlayVoiceGuide")
-                                            aGuidance.locationGuide?.location?.let {
-                                                binding.mapView.cullPassedRoute(it, true)
-                                            }
-                                            setTBT(aGuidance .locationGuide?.gpsMatched)
-                                            //setCamera(aGuidance.locationGuide?.gpsMatched)
+
                                         }
 
                                         // 음성 안내 사용 여부를 설정합니다. (true: 음성 안내 사용 / false: 음성 안내 사용 안 함)
@@ -548,11 +469,7 @@ class NaviActivity : AppCompatActivity()
                                             aNewData: MutableList<ByteArray>
                                         ): Boolean {
                                             Log.v(TAG, "shouldPlayVoiceGuide")
-                                            aGuidance.locationGuide?.location?.let {
-                                                binding.mapView.cullPassedRoute(it, true)
-                                            }
-                                            setTBT(aGuidance .locationGuide?.gpsMatched)
-                                            //setCamera(aGuidance.locationGuide?.gpsMatched)
+
                                             return true
                                         }
 
@@ -562,11 +479,7 @@ class NaviActivity : AppCompatActivity()
                                             aVoiceGuide: KNGuide_Voice
                                         ) {
                                             Log.v(TAG, "willPlayVoiceGuide")
-                                            aGuidance.locationGuide?.location?.let {
-                                                binding.mapView.cullPassedRoute(it, true)
-                                            }
-                                            setTBT(aGuidance .locationGuide?.gpsMatched)
-                                            //setCamera(aGuidance.locationGuide?.gpsMatched)
+
                                         }
                                     }
 
@@ -578,16 +491,14 @@ class NaviActivity : AppCompatActivity()
                                             aCitsGuide: KNGuide_Cits
                                         ) {
                                             Log.v(TAG, "didUpdateCitsGuide")
-                                            aGuidance.locationGuide?.location?.let {
-                                                binding.mapView.cullPassedRoute(it, true)
-                                            }
-                                            setTBT(aGuidance .locationGuide?.gpsMatched)
-                                            //setCamera(aGuidance.locationGuide?.gpsMatched)
+
                                         }
 
                                     }
 
                                 }
+
+                                setCurrentTBT()
 
                                 FindLoadApplication.knsdk.sharedGuidance()?.startWithTrip(aTrip, KNRoutePriority.KNRoutePriority_Recommand, KNRouteAvoidOption.KNRouteAvoidOption_None.value)
                             }
@@ -602,11 +513,59 @@ class NaviActivity : AppCompatActivity()
         }
     }
 
+    // 입력받은 사용자의 위치 정보를 통해 사용자가 지나간 경로 부분을 자릅니다.
+    // https://developers.kakaomobility.com/docs/android-ref-kotlin/class-KNMapView/
+    fun cullingRouteWithMapView() {
+        FindLoadApplication.knsdk.sharedGuidance()?.locationGuide?.location?.let {
+            binding.mapView.cullPassedRoute(
+                it, true)
+        }
+
+    }
+
+    private fun setCurrentTBT() {
+
+        FindLoadApplication.knsdk.requestLocationUpdate(delegate = object : KNGPSReceiver {
+            override fun didReceiveGpsData(aGpsData: KNGPSData) {
+                if(userPOV.value == 3) {
+                    // 현재 사용자가 3인칭 시점인 경우
+                    var currentLocWGS = KATECToWGS84(aGpsData.pos.x, aGpsData.pos.y)
+                    val currentLocKATEC = WGS84ToKATEC(currentLocWGS.x ,currentLocWGS.y)
+
+                    //Log.v(TAG, "currentLocKATEC is x ${currentLocKATEC.x} y ${currentLocKATEC.y}")
+//                    binding.mapView.userLocation?.apply {
+//                        isVisible = true
+//                        isVisibleGuideLine = true
+//                        coordinate = currentLocKATEC.toFloatPoint()
+//                        angle = aGpsData.angle.toFloat()
+//                    }
+
+                    //cullingRouteWithMapView()
+
+                    Log.v(TAG, "bearing ${binding.mapView.bearing}")
+                } else if(userPOV.value == 1) {
+                    // 현재 사용자가 1인칭 시점인 경우
+                    var currentLocWGS = KATECToWGS84(aGpsData.pos.x, aGpsData.pos.y)
+                    val currentLocKATEC = WGS84ToKATEC(currentLocWGS.x ,currentLocWGS.y)
+
+                    Log.v(TAG, "aGpsData.angle.toFloat() ${aGpsData.angle.toFloat()}")
+
+                    cullingRouteWithMapView()
+                    setTBT(FindLoadApplication.knsdk.sharedGuidance()?.locationGuide?.gpsMatched)
+                }
+
+
+
+            }
+        })
+    }
+
     private fun rotate(bearing : Int, aGpsData : KNGPSData?) {
         var currentLocWGS = aGpsData?.pos?.let { KATECToWGS84(it.x, aGpsData.pos.y) }
         val currentLocKATEC = currentLocWGS?.let { WGS84ToKATEC(it.x ,currentLocWGS.y) }
-        Log.v(TAG, "rotated bearing is ${bearing.toString()}")
+        //Log.v(TAG, "rotated bearing is ${bearing.toString()}")
         if (currentLocKATEC != null) {
+            //binding.mapView.animateCamera(KNMapCameraUpdate.bearingTo(bearing.toFloat()), 500, true, false)
             binding.mapView.animateCamera(KNMapCameraUpdate.bearingTo(bearing.toFloat()).targetTo(currentLocKATEC.toFloatPoint()), 500, true, false)
         }
     }
