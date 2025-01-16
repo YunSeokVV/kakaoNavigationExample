@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
 import com.example.findloadsampleproject.databinding.ActivityKnnaviViewBinding
 import com.example.findloadsampleproject.databinding.ActivityNaviBinding
 import com.kakaomobility.knsdk.KNCarFuel
@@ -39,6 +40,7 @@ import com.kakaomobility.knsdk.trip.knrouteconfiguration.KNRouteConfiguration
 import com.kakaomobility.knsdk.trip.kntrip.KNTrip
 import com.kakaomobility.knsdk.trip.kntrip.knroute.KNRoute
 import com.kakaomobility.knsdk.ui.view.KNNaviViewState
+import kotlinx.coroutines.launch
 
 class KNNaviView : AppCompatActivity(),
     KNGuidance_GuideStateDelegate,
@@ -194,10 +196,12 @@ class KNNaviView : AppCompatActivity(),
 
 
     override fun guidanceCheckingRouteChange(aGuidance: KNGuidance) {
+        showMethodInfo("guidanceCheckingRouteChange")
         binding.naviView.guidanceCheckingRouteChange(aGuidance)
     }
 
     override fun guidanceDidUpdateIndoorRoute(aGuidance: KNGuidance, aRoute: KNRoute?) {
+        showMethodInfo("guidanceDidUpdateIndoorRoute")
         binding.naviView.guidanceDidUpdateIndoorRoute(aGuidance, aRoute)
     }
 
@@ -206,19 +210,23 @@ class KNNaviView : AppCompatActivity(),
         aRoutes: List<KNRoute>,
         aMultiRouteInfo: KNMultiRouteInfo?
     ) {
+        showMethodInfo("guidanceDidUpdateRoutes")
         binding.naviView.guidanceDidUpdateRoutes(aGuidance, aRoutes, aMultiRouteInfo)
     }
 
 
     override fun guidanceGuideEnded(aGuidance: KNGuidance) {
+        showMethodInfo("guidanceGuideEnded")
         binding.naviView.guidanceGuideEnded(aGuidance)
     }
 
     override fun guidanceGuideStarted(aGuidance: KNGuidance) {
+        showMethodInfo("guidanceGuideStarted")
         binding.naviView.guidanceGuideStarted(aGuidance)
     }
 
     override fun guidanceOutOfRoute(aGuidance: KNGuidance) {
+        showMethodInfo("guidanceOutOfRoute")
         binding.naviView.guidanceOutOfRoute(aGuidance)
     }
 
@@ -230,14 +238,20 @@ class KNNaviView : AppCompatActivity(),
         aToLocation: KNLocation,
         aChangeReason: KNGuideRouteChangeReason
     ) {
+        showMethodInfo("guidanceRouteChanged")
+
         binding.naviView.guidanceRouteChanged(aGuidance)
     }
 
     override fun guidanceRouteUnchanged(aGuidance: KNGuidance) {
+        showMethodInfo("guidanceRouteUnchanged")
+
         binding.naviView.guidanceRouteUnchanged(aGuidance)
     }
 
     override fun guidanceRouteUnchangedWithError(aGuidnace: KNGuidance, aError: KNError) {
+        showMethodInfo("guidanceRouteUnchangedWithError")
+
         binding.naviView.guidanceRouteUnchangedWithError(aGuidnace, aError)
     }
 
@@ -245,6 +259,8 @@ class KNNaviView : AppCompatActivity(),
         aGuidance: KNGuidance,
         aLocationGuide: KNGuide_Location
     ) {
+        showMethodInfo("guidanceDidUpdateLocation")
+
         val bearing = aLocationGuide.gpsOrigin.angle
         Toast.makeText(this, "${bearing.toString()}", Toast.LENGTH_LONG).show()
         Log.v(TAG, "current bearing is ${bearing}")
@@ -252,6 +268,8 @@ class KNNaviView : AppCompatActivity(),
     }
 
     override fun guidanceDidUpdateRouteGuide(aGuidance: KNGuidance, aRouteGuide: KNGuide_Route) {
+        showMethodInfo("guidanceDidUpdateRouteGuide")
+
         binding.naviView.guidanceDidUpdateRouteGuide(aGuidance, aRouteGuide)
     }
 
@@ -259,6 +277,8 @@ class KNNaviView : AppCompatActivity(),
         aGuidance: KNGuidance,
         aSafeties: List<KNSafety>?
     ) {
+        showMethodInfo("guidanceDidUpdateAroundSafeties")
+
         binding.naviView.guidanceDidUpdateAroundSafeties(aGuidance, aSafeties)
     }
 
@@ -266,10 +286,14 @@ class KNNaviView : AppCompatActivity(),
         aGuidance: KNGuidance,
         aSafetyGuide: KNGuide_Safety?
     ) {
+        showMethodInfo("guidanceDidUpdateSafetyGuide")
+
         binding.naviView.guidanceDidUpdateSafetyGuide(aGuidance, aSafetyGuide)
     }
 
     override fun didFinishPlayVoiceGuide(aGuidance: KNGuidance, aVoiceGuide: KNGuide_Voice) {
+        showMethodInfo("didFinishPlayVoiceGuide")
+
         binding.naviView.didFinishPlayVoiceGuide(aGuidance, aVoiceGuide)
     }
 
@@ -278,15 +302,28 @@ class KNNaviView : AppCompatActivity(),
         aVoiceGuide: KNGuide_Voice,
         aNewData: MutableList<ByteArray>
     ): Boolean {
+        showMethodInfo("shouldPlayVoiceGuide")
+
         return binding.naviView.shouldPlayVoiceGuide(aGuidance, aVoiceGuide, aNewData)
     }
 
     override fun willPlayVoiceGuide(aGuidance: KNGuidance, aVoiceGuide: KNGuide_Voice) {
+        showMethodInfo("willPlayVoiceGuide")
+
         binding.naviView.willPlayVoiceGuide(aGuidance, aVoiceGuide)
     }
 
     override fun didUpdateCitsGuide(aGuidance: KNGuidance, aCitsGuide: KNGuide_Cits) {
+        showMethodInfo("didUpdateCitsGuide")
+
         binding.naviView.didUpdateCitsGuide(aGuidance, aCitsGuide)
     }
+
+    private fun showMethodInfo(methodName : String) {
+        lifecycleScope.launch {
+            binding.showData.setText(methodName)
+        }
+    }
+
 
 }
