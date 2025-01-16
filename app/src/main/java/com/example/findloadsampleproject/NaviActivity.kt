@@ -527,35 +527,29 @@ class NaviActivity : AppCompatActivity() {
 
         FindLoadApplication.knsdk.requestLocationUpdate(delegate = object : KNGPSReceiver {
             override fun didReceiveGpsData(aGpsData: KNGPSData) {
+                cullingRouteWithMapView()
                 if(userPOV.value == 3) {
                     // 현재 사용자가 3인칭 시점인 경우
-                    var currentLocWGS = KATECToWGS84(aGpsData.pos.x, aGpsData.pos.y)
-                    val currentLocKATEC = WGS84ToKATEC(currentLocWGS.x ,currentLocWGS.y)
-
-                    //Log.v(TAG, "currentLocKATEC is x ${currentLocKATEC.x} y ${currentLocKATEC.y}")
-//                    binding.mapView.userLocation?.apply {
-//                        isVisible = true
-//                        isVisibleGuideLine = true
-//                        coordinate = currentLocKATEC.toFloatPoint()
-//                        angle = aGpsData.angle.toFloat()
-//                    }
-
-                    //cullingRouteWithMapView()
+                    val matchedGPS = FindLoadApplication.knsdk.sharedGuidance()?.locationGuide?.gpsMatched
+                    if (matchedGPS != null) {
+                        matchedGPS?.angle?.toFloat()?.let {
+                            binding.mapView.userLocation?.animate(
+                                // 이동할 위치의 카텍 좌표
+                                coordinate = matchedGPS.pos,
+                                angle = it,
+                                duration = 500,
+                                useNorthHeadingMode = false
+                            )
+                        }
+                    }
 
                     Log.v(TAG, "bearing ${binding.mapView.bearing}")
                 } else if(userPOV.value == 1) {
                     // 현재 사용자가 1인칭 시점인 경우
                     var currentLocWGS = KATECToWGS84(aGpsData.pos.x, aGpsData.pos.y)
-                    val currentLocKATEC = WGS84ToKATEC(currentLocWGS.x ,currentLocWGS.y)
-
                     Log.v(TAG, "aGpsData.angle.toFloat() ${aGpsData.angle.toFloat()}")
-
-                    cullingRouteWithMapView()
                     setTBT(FindLoadApplication.knsdk.sharedGuidance()?.locationGuide?.gpsMatched)
                 }
-
-
-
             }
         })
     }
