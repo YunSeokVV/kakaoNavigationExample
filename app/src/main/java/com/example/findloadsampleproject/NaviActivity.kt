@@ -79,8 +79,8 @@ class NaviActivity : AppCompatActivity() {
         }
 
         binding.setting.setOnClickListener {
-            val dialog = SettingDialog()
-            dialog.show(this.supportFragmentManager,"sdf")
+            val dialog = SettingDialog(binding.mapView, this)
+            dialog.show()
         }
 
         initMapEventListener()
