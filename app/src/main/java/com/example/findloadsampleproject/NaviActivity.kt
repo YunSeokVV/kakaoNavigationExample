@@ -79,8 +79,8 @@ class NaviActivity : AppCompatActivity() {
         }
 
         binding.setting.setOnClickListener {
-            val dialog = SettingDialog()
-            dialog.show(this.supportFragmentManager,"sdf")
+            val dialog = SettingDialog(binding.mapView, this)
+            dialog.show()
         }
 
         initMapEventListener()
@@ -339,8 +339,8 @@ class NaviActivity : AppCompatActivity() {
                                             aRoutes: List<KNRoute>,
                                             aMultiRouteInfo: KNMultiRouteInfo?
                                         ) {
+                                            binding.mapView.setRoutes(aRoutes.toList())
                                             Log.v(TAG, "guidanceDidUpdateRoutes")
-
                                         }
 
                                         // 길 안내가 종료됩니다.
