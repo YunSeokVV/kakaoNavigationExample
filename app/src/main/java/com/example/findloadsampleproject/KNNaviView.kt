@@ -211,6 +211,7 @@ class KNNaviView : AppCompatActivity(),
         aMultiRouteInfo: KNMultiRouteInfo?
     ) {
         showMethodInfo("guidanceDidUpdateRoutes")
+
         binding.naviView.guidanceDidUpdateRoutes(aGuidance, aRoutes, aMultiRouteInfo)
     }
 
@@ -260,10 +261,16 @@ class KNNaviView : AppCompatActivity(),
         aLocationGuide: KNGuide_Location
     ) {
         showMethodInfo("guidanceDidUpdateLocation")
+        
+        Log.v(TAG, "value 1 is ... ${aGuidance.locationGuide?.gpsOrigin}")
+        Log.v(TAG, "value 2 is ... ${aGuidance.locationGuide?.gpsMatched}")
 
-        val bearing = aLocationGuide.gpsOrigin.angle
-        Toast.makeText(this, "${bearing.toString()}", Toast.LENGTH_LONG).show()
-        Log.v(TAG, "current bearing is ${bearing}")
+        if(aGuidance.locationGuide?.gpsOrigin?.valid == true) {
+            Toast.makeText(this, "1 : ${aGuidance.locationGuide?.gpsOrigin!!.valid} 2: ${aGuidance.locationGuide?.gpsMatched!!.valid}",Toast.LENGTH_LONG).show()
+        }
+
+        FindLoadApplication.knsdk.sharedGpsManager()?.motionReceiver
+
         binding.naviView.guidanceDidUpdateLocation(aGuidance, aLocationGuide)
     }
 

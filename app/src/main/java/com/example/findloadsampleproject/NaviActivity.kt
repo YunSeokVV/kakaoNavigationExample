@@ -54,6 +54,7 @@ import com.kakaomobility.knsdk.map.knmapview.KNMapView
 import com.kakaomobility.knsdk.map.knmapview.idl.KNMapViewEventListener
 import com.kakaomobility.knsdk.map.knmapview.idl.KNMarkerEventListener
 import com.kakaomobility.knsdk.map.uicustomsupport.renewal.KNMapMarker
+import com.kakaomobility.knsdk.map.uicustomsupport.renewal.theme.base.KNMapTheme
 import com.kakaomobility.knsdk.trip.knrouteconfiguration.KNRouteConfiguration
 import com.kakaomobility.knsdk.trip.kntrip.knroute.KNRoute
 
@@ -72,9 +73,14 @@ class NaviActivity : AppCompatActivity() {
 
         FindLoadApplication.knsdk.isShowBuilding = true
         initMapView(binding.mapView)
-
+        
         binding.mockPlay.setOnClickListener {
             startMockDrive()
+        }
+
+        binding.setting.setOnClickListener {
+            val dialog = SettingDialog()
+            dialog.show(this.supportFragmentManager,"sdf")
         }
 
         initMapEventListener()
