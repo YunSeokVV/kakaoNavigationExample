@@ -2,7 +2,9 @@ package com.example.findloadsampleproject
 
 import android.app.Application
 import com.kakaomobility.knsdk.KNSDK
+import dagger.hilt.android.HiltAndroidApp
 
+@HiltAndroidApp
 class FindLoadApplication : Application() {
     companion object {
         lateinit var knsdk: KNSDK

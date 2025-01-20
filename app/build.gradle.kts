@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+
+    alias(libs.plugins.kotlinAndroidKsp)
 }
 
 android {
@@ -51,7 +53,8 @@ dependencies {
     //https://developers.kakaomobility.com/docs/android/start/
     implementation(libs.knsdk.ui)
 
-
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
