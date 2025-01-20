@@ -41,6 +41,7 @@
 
 
     <LinearLayout
+        android:id="@+id/linearLayout2"
         android:layout_width="match_parent"
         android:layout_height="50dp"
         app:layout_constraintEnd_toEndOf="parent"
@@ -56,5 +57,4 @@
             android:text="2D/3D 설정" />
 
     </LinearLayout>
-
 </androidx.constraintlayout.widget.ConstraintLayout>

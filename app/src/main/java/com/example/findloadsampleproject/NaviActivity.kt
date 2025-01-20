@@ -51,10 +51,13 @@ import com.kakaomobility.knsdk.guidance.knguidance.voiceguide.KNVoiceCode
 import com.kakaomobility.knsdk.guidance.knguidance.voiceguide.KNVoiceDist
 import com.kakaomobility.knsdk.map.knmaprenderer.objects.KNMapCameraUpdate
 import com.kakaomobility.knsdk.map.knmapview.KNMapView
+import com.kakaomobility.knsdk.map.knmapview.idl.KNMapRouteEventListener
 import com.kakaomobility.knsdk.map.knmapview.idl.KNMapViewEventListener
 import com.kakaomobility.knsdk.map.knmapview.idl.KNMarkerEventListener
 import com.kakaomobility.knsdk.map.uicustomsupport.renewal.KNMapMarker
+import com.kakaomobility.knsdk.map.uicustomsupport.renewal.theme.base.KNMapRouteTheme
 import com.kakaomobility.knsdk.map.uicustomsupport.renewal.theme.base.KNMapTheme
+import com.kakaomobility.knsdk.map.uicustomsupport.renewal.theme.base.entity.KNRouteColors
 import com.kakaomobility.knsdk.trip.knrouteconfiguration.KNRouteConfiguration
 import com.kakaomobility.knsdk.trip.kntrip.knroute.KNRoute
 
@@ -62,6 +65,8 @@ class NaviActivity : AppCompatActivity() {
     // 현재 사용자의 시점이 1인칭인지 3인칭인지 판별해주는 변수
     var _userPOV = MutableLiveData<Int>(1)
     val userPOV :LiveData<Int>  = _userPOV
+
+    var currentZoom = 0f
 
     val TAG = "NaviActivity"
     private lateinit var binding : ActivityNaviBinding
@@ -98,6 +103,18 @@ class NaviActivity : AppCompatActivity() {
         // 1인칭 시점으로 다시 전환
         binding.btnCurrentLocation.setOnClickListener {
             _userPOV.value = 1
+        }
+
+        // 줌인
+        binding.zoomIn.setOnClickListener {
+            currentZoom -= 0.5f
+            binding.mapView.animateCamera(KNMapCameraUpdate.zoomTo(currentZoom), 0, false, false)
+        }
+
+        // 줌아웃
+        binding.zoomOut.setOnClickListener {
+            currentZoom += 0.5f
+            binding.mapView.animateCamera(KNMapCameraUpdate.zoomTo(currentZoom), 0, false, false)
         }
 
     }
@@ -220,6 +237,7 @@ class NaviActivity : AppCompatActivity() {
             ) {
                 // 현재 시점을 3인칭으로 바꿈
                 _userPOV.value = 3
+                currentZoom = zoom
                 Log.v(TAG, "onZoomingChanging called")
             }
 
@@ -335,11 +353,32 @@ class NaviActivity : AppCompatActivity() {
 
                                         // 기존 경로가 변경됩니다.
                                         override fun guidanceDidUpdateRoutes(
+                                            // 길 안내 기능 및 경로 정보
                                             aGuidance: KNGuidance,
+                                            // 경로 리스트. 최대 2개의 경로를 전달할 수 있으며 순서대로 주 경로, 대안 경로로 구성됨(대안 경로 생략 가능)
                                             aRoutes: List<KNRoute>,
+                                            // 대안 경로 정보(대안 경로 정보가 있는 경우)
                                             aMultiRouteInfo: KNMultiRouteInfo?
                                         ) {
-                                            binding.mapView.setRoutes(aRoutes.toList())
+                                            runOnUiThread {
+                                                val avoidOption = 0
+                                                val routeOption = KNRoutePriority.KNRoutePriority_Recommand
+                                                aGuidance.trip?.routeWithPriority(routeOption, avoidOption, { error, routes ->
+
+                                                    // 경로 요청 실패
+                                                    if (error != null) {
+                                                        Log.v(TAG,"error is ${error.msg} code is ${error.code}")
+                                                    }
+                                                    // 경로 요청 성공
+                                                    else {
+                                                        if (routes != null) {
+                                                            binding.mapView.setRoutes(routes.toList())
+                                                        }
+                                                    }
+
+                                                })
+                                            }
+
                                             Log.v(TAG, "guidanceDidUpdateRoutes")
                                         }
 
@@ -395,6 +434,8 @@ class NaviActivity : AppCompatActivity() {
                                             aGuidance: KNGuidance,
                                             aLocationGuide: KNGuide_Location
                                         ) {
+
+
                                             //Log.v(TAG, "guidanceDidUpdateLocation")
 
                                         }
@@ -530,10 +571,10 @@ class NaviActivity : AppCompatActivity() {
     }
 
     private fun setCurrentTBT() {
-
         FindLoadApplication.knsdk.requestLocationUpdate(delegate = object : KNGPSReceiver {
-            override fun didReceiveGpsData(aGpsData: KNGPSData) {
+            override fun didReceiveGpsData(aGpsData: KNGPSData)     {
                 cullingRouteWithMapView()
+                binding.mapView.routeProperties?.theme = KNMapRouteTheme.trafficDay()
                 if(userPOV.value == 3) {
                     // 현재 사용자가 3인칭 시점인 경우
                     val matchedGPS = FindLoadApplication.knsdk.sharedGuidance()?.locationGuide?.gpsMatched
