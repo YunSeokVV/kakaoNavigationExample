@@ -75,4 +75,17 @@
         app:layout_constraintBottom_toBottomOf="@+id/map_view"
         app:layout_constraintEnd_toStartOf="@+id/setting" />
 
+    <TextView
+        android:id="@+id/infoText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="각종정보들을 여기다가 표현합니다다다다"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="10dp"
+        android:textStyle="bold"
+        android:visibility="gone"
+        android:textColor="@color/purple_700"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

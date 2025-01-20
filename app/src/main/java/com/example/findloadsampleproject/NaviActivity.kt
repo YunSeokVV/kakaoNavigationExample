@@ -66,6 +66,13 @@ class NaviActivity : AppCompatActivity() {
     var _userPOV = MutableLiveData<Int>(1)
     val userPOV :LiveData<Int>  = _userPOV
 
+    // 각종 시스템 정보를 표현할지 여부
+    var infoVisibility = false
+
+    // 현재 시스템의 각종 정보를 표현해주기 위한 문자열
+    var _infoText = MutableLiveData<String>()
+    val infoText : LiveData<String> = _infoText
+
     var currentZoom = 0f
 
     val TAG = "NaviActivity"
@@ -96,6 +103,11 @@ class NaviActivity : AppCompatActivity() {
             }
         })
 
+        infoText.observe(this, { speed ->
+            binding.infoText.setText("현재 속도 :${infoText.value}")
+
+        })
+
         // 1인칭 시점으로 다시 전환
         binding.btnCurrentLocation.setOnClickListener {
             _userPOV.value = 1
@@ -112,6 +124,16 @@ class NaviActivity : AppCompatActivity() {
             currentZoom += 0.5f
             binding.mapView.animateCamera(KNMapCameraUpdate.zoomTo(currentZoom), 0, false, false)
         }
+
+        binding.imageView.setOnClickListener { visibility ->
+            infoVisibility = !infoVisibility
+            if(infoVisibility) {
+                binding.infoText.visibility = View.VISIBLE
+            } else {
+                binding.infoText.visibility = View.GONE
+            }
+        }
+
 
     }
 
@@ -570,6 +592,9 @@ class NaviActivity : AppCompatActivity() {
         FindLoadApplication.knsdk.requestLocationUpdate(delegate = object : KNGPSReceiver {
             override fun didReceiveGpsData(aGpsData: KNGPSData)     {
                 cullingRouteWithMapView()
+
+                _infoText.value = aGpsData.speed.toString()
+
                 binding.mapView.routeProperties?.theme = KNMapRouteTheme.trafficDay()
                 if(userPOV.value == 3) {
                     // 현재 사용자가 3인칭 시점인 경우
