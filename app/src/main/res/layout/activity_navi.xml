@@ -10,16 +10,6 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <Button
-        android:id="@+id/mockPlay"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="15dp"
-        android:layout_marginTop="20dp"
-        android:text="모의주행"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
     <TextView
         android:id="@+id/userPOV"
         android:layout_width="wrap_content"
@@ -36,11 +26,11 @@
         android:id="@+id/btnCurrentLocation"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:visibility="gone"
+        android:layout_marginLeft="15dp"
         android:text="현 위치로"
         android:textSize="15sp"
-        android:layout_marginLeft="15dp"
-        android:layout_marginBottom="20dp"
+        android:visibility="gone"
+        android:layout_marginBottom="10dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
@@ -68,11 +58,21 @@
         android:id="@+id/zoomIn"
         android:layout_width="55dp"
         android:layout_height="55dp"
+        android:layout_marginBottom="10dp"
+        android:layout_marginEnd="10dp"
         android:text="@string/plus"
         android:textColor="@color/white"
-        android:layout_marginBottom="10dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/setting" />
+        app:layout_constraintEnd_toStartOf="@+id/imageView" />
 
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginBottom="10dp"
+        android:background="@drawable/baseline_info_outline_24"
+        app:layout_constraintBottom_toBottomOf="@+id/map_view"
+        app:layout_constraintEnd_toStartOf="@+id/setting" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
