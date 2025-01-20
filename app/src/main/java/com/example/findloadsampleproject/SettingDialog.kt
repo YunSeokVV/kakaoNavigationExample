@@ -45,5 +45,15 @@ class SettingDialog(private val mapView : KNMapView, context : Context) : Dialog
             }
         }
 
+        binding.isVisibleTraffic.setOnCheckedChangeListener { compoundButton, turnOn ->
+            if(turnOn) {
+                // 지도상 교통량 정보 표시
+                mapView.isVisibleTraffic = true
+            } else {
+                // 가리기
+                mapView.isVisibleTraffic = false
+            }
+        }
+
     }
 }
