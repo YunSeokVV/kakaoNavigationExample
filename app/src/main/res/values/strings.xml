@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">테스트네비게이션</string>
+    <string name="minus">-</string>
+    <string name="plus">+</string>
 </resources>
