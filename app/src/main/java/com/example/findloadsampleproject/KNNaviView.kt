@@ -266,7 +266,9 @@ class KNNaviView : AppCompatActivity(),
         Log.v(TAG, "value 2 is ... ${aGuidance.locationGuide?.gpsMatched}")
 
         if(aGuidance.locationGuide?.gpsOrigin?.valid == true) {
-            Toast.makeText(this, "1 : ${aGuidance.locationGuide?.gpsOrigin!!.valid} 2: ${aGuidance.locationGuide?.gpsMatched!!.valid}",Toast.LENGTH_LONG).show()
+            Log.v(TAG, "GPS정보 수신 가능함. 수신중!")
+        } else {
+            Log.v(TAG, "GPS정보 수신 불가능함.")
         }
 
         FindLoadApplication.knsdk.sharedGpsManager()?.motionReceiver

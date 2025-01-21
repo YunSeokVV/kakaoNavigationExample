@@ -1,5 +1,6 @@
 package com.example.findloadsampleproject
 
+import android.content.Context
 import android.location.Location
 import android.os.Bundle
 import android.os.Handler
@@ -15,7 +16,9 @@ import com.example.findloadsampleproject.databinding.ActivityNaviBinding
 import com.kakaomobility.knsdk.KNCarFuel
 import com.kakaomobility.knsdk.KNCarType
 import com.kakaomobility.knsdk.KNCarUsage
-
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import java.io.File
 import com.kakaomobility.knsdk.KNRouteAvoidOption
 import com.kakaomobility.knsdk.KNRoutePriority
 import com.kakaomobility.knsdk.KNSDK
@@ -49,6 +52,7 @@ import com.kakaomobility.knsdk.guidance.knguidance.safetyguide.objects.KNSafety
 import com.kakaomobility.knsdk.guidance.knguidance.voiceguide.KNGuide_Voice
 import com.kakaomobility.knsdk.guidance.knguidance.voiceguide.KNVoiceCode
 import com.kakaomobility.knsdk.guidance.knguidance.voiceguide.KNVoiceDist
+import com.kakaomobility.knsdk.map.knmapimage.KNMapImage
 import com.kakaomobility.knsdk.map.knmaprenderer.objects.KNMapCameraUpdate
 import com.kakaomobility.knsdk.map.knmapview.KNMapView
 import com.kakaomobility.knsdk.map.knmapview.idl.KNMapRouteEventListener
@@ -60,11 +64,14 @@ import com.kakaomobility.knsdk.map.uicustomsupport.renewal.theme.base.KNMapTheme
 import com.kakaomobility.knsdk.map.uicustomsupport.renewal.theme.base.entity.KNRouteColors
 import com.kakaomobility.knsdk.trip.knrouteconfiguration.KNRouteConfiguration
 import com.kakaomobility.knsdk.trip.kntrip.knroute.KNRoute
+import java.io.FileOutputStream
 
 class NaviActivity : AppCompatActivity() {
     // 현재 사용자의 시점이 1인칭인지 3인칭인지 판별해주는 변수
     var _userPOV = MutableLiveData<Int>(1)
     val userPOV :LiveData<Int>  = _userPOV
+
+    lateinit var userTBTIcon : Bitmap
 
     // 각종 시스템 정보를 표현할지 여부
     var infoVisibility = false
@@ -84,7 +91,10 @@ class NaviActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         FindLoadApplication.knsdk.isShowBuilding = true
+
         initMapView(binding.mapView)
+
+        binding.mapView.userLocation?.icon
 
         binding.setting.setOnClickListener {
             val dialog = SettingDialog(binding.mapView, this)
@@ -174,14 +184,15 @@ class NaviActivity : AppCompatActivity() {
                 mapView: KNMapView?,
                 cameraUpdate: KNMapCameraUpdate?
             ) {
-                //Log.v(TAG, "onCameraAnimationEnded")
-
                 binding.mapView.userLocation?.apply {
                     isVisible = true
                     isVisibleGuideLine = true
                     // 사용자 위치가 표시되는 카텍(KATEC) 좌표
                     //coordinate = currentGPSData.toFloatPoint()
                 }
+                    // icon 속성을 없애면 기본TBT로 설정됨. GPS정보를 찾을 수 없을때 회색 TBT아이콘을 설정할 방법이 KNMapView에는 현재 존재하지 않음. 아래 데브톡에서 문의중.
+                    //https://devtalk.kakao.com/t/knsdk-tbt/142014
+                    ?.icon = userTBTIcon
 
             }
 
@@ -345,7 +356,7 @@ class NaviActivity : AppCompatActivity() {
                             Log.v(TAG,"routes is ${routes}")
 
                             if (routes != null) {
-                                binding.mapView.setRoutes(routes.toList())
+                                //binding.mapView.setRoutes(routes.toList())
 
                                 //setTBT()
 
@@ -391,6 +402,8 @@ class NaviActivity : AppCompatActivity() {
                                                     else {
                                                         if (routes != null) {
                                                             binding.mapView.setRoutes(routes.toList())
+                                                            binding.mapView.routeProperties?.theme = KNMapRouteTheme.driveDay()
+
                                                         }
                                                     }
 
@@ -468,7 +481,15 @@ class NaviActivity : AppCompatActivity() {
                                         ) {
                                             // todo : 여기는 항상 호출된다. withUI에서 모의주행을 실행하지 않아도 계속 호출되는 곳이다.
                                             Log.v(TAG, "guidanceDidUpdateLocation")
-                                            //currentKNGuidance = aGuidance
+
+                                            if(aGuidance.locationGuide?.gpsOrigin?.valid == true) {
+                                                // 현재 GPS정보가 수신되는중일떄
+                                                userTBTIcon = BitmapFactory.decodeResource(resources, R.drawable.powered_navigation)
+                                            } else {
+                                                // 현재 GPS정보가 수신중이지 않을때
+                                                userTBTIcon = BitmapFactory.decodeResource(resources, R.drawable.unpowered_navigation)
+
+                                            }
 
                                         }
 
@@ -630,6 +651,16 @@ class NaviActivity : AppCompatActivity() {
             //binding.mapView.animateCamera(KNMapCameraUpdate.bearingTo(bearing.toFloat()), 500, true, false)
             binding.mapView.animateCamera(KNMapCameraUpdate.bearingTo(bearing.toFloat()).targetTo(currentLocKATEC.toFloatPoint()), 500, true, false)
         }
+    }
+
+    fun copyRawResourceToInternalStorage(context: Context, rawResId: Int, fileName: String) {
+        val inputStream = context.resources.openRawResource(rawResId) // raw 리소스 읽기
+        val outFile = File(context.filesDir, fileName) // 내부 저장소에 저장
+        val outputStream = FileOutputStream(outFile)
+
+        inputStream.copyTo(outputStream) // 데이터 복사
+        inputStream.close()
+        outputStream.close()
     }
 
 }
