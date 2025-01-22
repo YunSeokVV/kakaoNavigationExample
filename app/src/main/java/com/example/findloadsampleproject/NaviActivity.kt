@@ -82,8 +82,6 @@ class NaviActivity : AppCompatActivity() {
     var _currentSpeed = MutableLiveData<String>()
     val currentSpeed : LiveData<String> = _currentSpeed
 
-    var currentZoom = 0f
-
     val TAG = "NaviActivity"
     private lateinit var binding : ActivityNaviBinding
 
@@ -108,6 +106,8 @@ class NaviActivity : AppCompatActivity() {
             binding.userPOV.setText("${POV}인칭 시점")
             if(POV == 1) {
                 // 1인칭 시점인 경우
+                // 줌설정이 너무 크거나 작지않게 다시 재설정해준다
+                binding.mapView.moveCamera(KNMapCameraUpdate.zoomTo(2.5f), false, false)
                 binding.btnCurrentLocation.visibility = View.GONE
             } else if(POV == 3) {
                 // 3인칭 시점인 경우
@@ -143,14 +143,24 @@ class NaviActivity : AppCompatActivity() {
 
         // 줌인
         binding.zoomIn.setOnClickListener {
-            currentZoom -= 0.5f
-            binding.mapView.animateCamera(KNMapCameraUpdate.zoomTo(currentZoom), 0, false, false)
+            //currentZoom -= 0.5f
+            viewModel.zoomIn()
+            viewModel.currentZoom.value?.let { it1 ->
+                KNMapCameraUpdate.zoomTo(
+                    it1
+                )
+            }?.let { it2 -> binding.mapView.animateCamera(it2, 0, false, false) }
         }
 
         // 줌아웃
         binding.zoomOut.setOnClickListener {
-            currentZoom += 0.5f
-            binding.mapView.animateCamera(KNMapCameraUpdate.zoomTo(currentZoom), 0, false, false)
+            //currentZoom += 0.5f
+            viewModel.zoomOut()
+            viewModel.currentZoom.value?.let { it1 ->
+                KNMapCameraUpdate.zoomTo(
+                    it1
+                )
+            }?.let { it2 -> binding.mapView.animateCamera(it2, 0, false, false) }
         }
 
         binding.imageView.setOnClickListener { visibility ->
@@ -284,8 +294,8 @@ class NaviActivity : AppCompatActivity() {
             ) {
                 // 현재 시점을 3인칭으로 바꿈
                 _userPOV.value = 3
-                currentZoom = zoom
-                Log.v(TAG, "onZoomingChanging called")
+                //currentZoom = zoom
+                viewModel.setZoom(zoom)
             }
 
             override fun onZoomingEnded(mapView: KNMapView?, screenPoint: IntPoint, zoom: Float) {

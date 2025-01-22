@@ -22,6 +22,30 @@ class NaviViewModel @Inject constructor() : ViewModel() {
     private var _roadType = MutableLiveData<String>()
     val roadType : LiveData<String> = _roadType
 
+    // https://developers.kakaomobility.com/docs/android-ref-kotlin/class-KNMapView/
+    //범위는 서버 설정에 따라 0.1에서 9999.0까지 지정할 수 있으며 이 범위를 벗어나는 설정은 무시됩니다.
+    private var _currentZoom = MutableLiveData<Float>(2.5f)
+    val currentZoom : LiveData<Float> = _currentZoom
+
+    fun setZoom(zoom: Float) {
+        _currentZoom.value = zoom
+    }
+
+    fun zoomOut() {
+        if(_currentZoom.value!! > 9999) {
+            return
+        }
+        _currentZoom.value = _currentZoom.value!! + 0.5f
+    }
+
+    fun zoomIn() {
+        if(_currentZoom.value!! < 0.1) {
+            return
+        }
+
+        _currentZoom.value = _currentZoom.value!! - 0.5f
+    }
+
     fun convertSafetyCode(safetyCode : String) : String{
         //https://developers.kakaomobility.com/docs/android-ref-kotlin/enumerate-KNSafetyCode/
         when(safetyCode) {
