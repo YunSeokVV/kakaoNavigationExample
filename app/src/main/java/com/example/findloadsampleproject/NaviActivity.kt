@@ -108,6 +108,8 @@ class NaviActivity : AppCompatActivity() {
             binding.userPOV.setText("${POV}인칭 시점")
             if(POV == 1) {
                 // 1인칭 시점인 경우
+                // 줌설정이 너무 크거나 작지않게 다시 재설정해준다
+                binding.mapView.moveCamera(KNMapCameraUpdate.zoomTo(2.5f), false, false)
                 binding.btnCurrentLocation.visibility = View.GONE
             } else if(POV == 3) {
                 // 3인칭 시점인 경우
