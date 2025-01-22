@@ -3,6 +3,7 @@ package com.example.findloadsampleproject
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.kakaomobility.knsdk.KNRoadType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
@@ -14,6 +15,12 @@ class NaviViewModel @Inject constructor() : ViewModel() {
 
     private var _currentTrafficSpd = MutableLiveData<Int>()
     val currentTrafficSpd : LiveData<Int> = _currentTrafficSpd
+
+    private var _roadName = MutableLiveData<String>()
+    val roadName : LiveData<String> = _roadName
+
+    private var _roadType = MutableLiveData<String>()
+    val roadType : LiveData<String> = _roadType
 
     fun convertSafetyCode(safetyCode : String) : String{
         //https://developers.kakaomobility.com/docs/android-ref-kotlin/enumerate-KNSafetyCode/
@@ -71,6 +78,17 @@ class NaviViewModel @Inject constructor() : ViewModel() {
         }
     }
 
+    fun convertKNRoadType(knRoadType: KNRoadType) : String{
+        when(knRoadType.name) {
+            "KNRoadType_Unknown" -> return "알 수 없음"
+            "KNRoadType_Highway" -> return "고속 도로"
+            "KNRoadType_GeneralRoad" -> return "일반 도로"
+            "KNRoadType_Ferry" -> return "페리 항로"
+            else -> return "값이 없음"
+        }
+
+    }
+
     fun setCurrentSafetyCode(safetyCode: String) {
         _currentSafetyCode.value = safetyCode
     }
@@ -79,7 +97,13 @@ class NaviViewModel @Inject constructor() : ViewModel() {
         _currentTrafficSpd.value = speed
     }
 
+    fun setCurrentRoadName(roadName: String) {
+        _roadName.value = roadName
+    }
 
+    fun setCurrentRoadType(roadType: String) {
+        _roadType.value = roadType
+    }
 
 
 }

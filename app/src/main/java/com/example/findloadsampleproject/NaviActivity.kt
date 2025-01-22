@@ -128,6 +128,14 @@ class NaviActivity : AppCompatActivity() {
             binding.trafficSpd.setText("경로 내 현재 위치한 도로의 주행 속도 정보 : ${info}")
         })
 
+        viewModel.roadName.observe(this, { road ->
+            binding.roadName.setText("현재 주행중인 도로명 : ${road}")
+        })
+
+        viewModel.roadType.observe(this, { roadType ->
+            binding.roadType.setText("현재 주행중인 도로타입 : ${roadType}")
+        })
+
         // 1인칭 시점으로 다시 전환
         binding.btnCurrentLocation.setOnClickListener {
             _userPOV.value = 1
@@ -498,8 +506,16 @@ class NaviActivity : AppCompatActivity() {
                                             } else {
                                                 // 현재 GPS정보가 수신중이지 않을때
                                                 userTBTIcon = BitmapFactory.decodeResource(resources, R.drawable.unpowered_navigation)
-
                                             }
+
+                                            val roadName = aLocationGuide.location?.roadName ?: "nothing"
+                                            viewModel.setCurrentRoadName(roadName)
+
+                                            val roadType = aLocationGuide.location?.roadType?.let {
+                                                viewModel.convertKNRoadType(it)
+                                            } ?: "값이 없음"
+
+                                            viewModel.setCurrentRoadType(roadType)
 
                                         }
 
