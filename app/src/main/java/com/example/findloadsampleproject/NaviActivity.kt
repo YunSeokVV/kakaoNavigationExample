@@ -82,8 +82,6 @@ class NaviActivity : AppCompatActivity() {
     var _currentSpeed = MutableLiveData<String>()
     val currentSpeed : LiveData<String> = _currentSpeed
 
-    var currentZoom = 0f
-
     val TAG = "NaviActivity"
     private lateinit var binding : ActivityNaviBinding
 
@@ -145,14 +143,24 @@ class NaviActivity : AppCompatActivity() {
 
         // 줌인
         binding.zoomIn.setOnClickListener {
-            currentZoom -= 0.5f
-            binding.mapView.animateCamera(KNMapCameraUpdate.zoomTo(currentZoom), 0, false, false)
+            //currentZoom -= 0.5f
+            viewModel.zoomIn()
+            viewModel.currentZoom.value?.let { it1 ->
+                KNMapCameraUpdate.zoomTo(
+                    it1
+                )
+            }?.let { it2 -> binding.mapView.animateCamera(it2, 0, false, false) }
         }
 
         // 줌아웃
         binding.zoomOut.setOnClickListener {
-            currentZoom += 0.5f
-            binding.mapView.animateCamera(KNMapCameraUpdate.zoomTo(currentZoom), 0, false, false)
+            //currentZoom += 0.5f
+            viewModel.zoomOut()
+            viewModel.currentZoom.value?.let { it1 ->
+                KNMapCameraUpdate.zoomTo(
+                    it1
+                )
+            }?.let { it2 -> binding.mapView.animateCamera(it2, 0, false, false) }
         }
 
         binding.imageView.setOnClickListener { visibility ->
@@ -286,8 +294,8 @@ class NaviActivity : AppCompatActivity() {
             ) {
                 // 현재 시점을 3인칭으로 바꿈
                 _userPOV.value = 3
-                currentZoom = zoom
-                Log.v(TAG, "onZoomingChanging called")
+                //currentZoom = zoom
+                viewModel.setZoom(zoom)
             }
 
             override fun onZoomingEnded(mapView: KNMapView?, screenPoint: IntPoint, zoom: Float) {
