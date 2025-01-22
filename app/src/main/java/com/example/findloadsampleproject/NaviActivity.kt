@@ -18,6 +18,7 @@ import com.kakaomobility.knsdk.KNCarType
 import com.kakaomobility.knsdk.KNCarUsage
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import androidx.activity.viewModels
 import java.io.File
 import com.kakaomobility.knsdk.KNRouteAvoidOption
 import com.kakaomobility.knsdk.KNRoutePriority
@@ -70,6 +71,7 @@ class NaviActivity : AppCompatActivity() {
     // 현재 사용자의 시점이 1인칭인지 3인칭인지 판별해주는 변수
     var _userPOV = MutableLiveData<Int>(1)
     val userPOV :LiveData<Int>  = _userPOV
+    val viewModel by viewModels<NaviViewModel>()
 
     lateinit var userTBTIcon : Bitmap
 
@@ -77,8 +79,8 @@ class NaviActivity : AppCompatActivity() {
     var infoVisibility = false
 
     // 현재 시스템의 각종 정보를 표현해주기 위한 문자열
-    var _infoText = MutableLiveData<String>()
-    val infoText : LiveData<String> = _infoText
+    var _currentSpeed = MutableLiveData<String>()
+    val currentSpeed : LiveData<String> = _currentSpeed
 
     var currentZoom = 0f
 
@@ -113,9 +115,17 @@ class NaviActivity : AppCompatActivity() {
             }
         })
 
-        infoText.observe(this, { speed ->
-            binding.infoText.setText("현재 속도 :${infoText.value}")
+        currentSpeed.observe(this, { speed ->
+            binding.currentSpeed.setText("현재 속도 :${currentSpeed.value}")
 
+        })
+
+        viewModel.currentSafetyCode.observe(this, { info ->
+            binding.knSafetyCode.setText("현재 경로 안내 표시 정보 : ${info}")
+        })
+
+        viewModel.currentTrafficSpd.observe(this, { info ->
+            binding.trafficSpd.setText("경로 내 현재 위치한 도로의 주행 속도 정보 : ${info}")
         })
 
         // 1인칭 시점으로 다시 전환
@@ -138,9 +148,9 @@ class NaviActivity : AppCompatActivity() {
         binding.imageView.setOnClickListener { visibility ->
             infoVisibility = !infoVisibility
             if(infoVisibility) {
-                binding.infoText.visibility = View.VISIBLE
+                binding.infoLayout.visibility = View.VISIBLE
             } else {
-                binding.infoText.visibility = View.GONE
+                binding.infoLayout.visibility = View.GONE
             }
         }
 
@@ -533,6 +543,17 @@ class NaviActivity : AppCompatActivity() {
                                         ) {
                                             Log.v(TAG, "guidanceDidUpdateSafetyGuide")
 
+                                            aSafetyGuide?.safetiesOnGuide?.map { knSafety: KNSafety ->
+                                                val value = viewModel.convertSafetyCode(knSafety.code.name)
+                                                viewModel.setCurrentSafetyCode(value)
+
+                                                val trafficSpd = knSafety.location.trafficSpd
+                                                viewModel.setCurrentTrafficSpd(trafficSpd)
+                                            }
+
+
+
+
                                         }
 
                                     }
@@ -614,7 +635,7 @@ class NaviActivity : AppCompatActivity() {
             override fun didReceiveGpsData(aGpsData: KNGPSData)     {
                 cullingRouteWithMapView()
 
-                _infoText.value = aGpsData.speed.toString()
+                _currentSpeed.value = aGpsData.speed.toString()
 
                 binding.mapView.routeProperties?.theme = KNMapRouteTheme.trafficDay()
                 if(userPOV.value == 3) {

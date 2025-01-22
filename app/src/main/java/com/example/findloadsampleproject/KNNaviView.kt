@@ -196,12 +196,12 @@ class KNNaviView : AppCompatActivity(),
 
 
     override fun guidanceCheckingRouteChange(aGuidance: KNGuidance) {
-        showMethodInfo("guidanceCheckingRouteChange")
+        //showMethodInfo("guidanceCheckingRouteChange")
         binding.naviView.guidanceCheckingRouteChange(aGuidance)
     }
 
     override fun guidanceDidUpdateIndoorRoute(aGuidance: KNGuidance, aRoute: KNRoute?) {
-        showMethodInfo("guidanceDidUpdateIndoorRoute")
+        //showMethodInfo("guidanceDidUpdateIndoorRoute")
         binding.naviView.guidanceDidUpdateIndoorRoute(aGuidance, aRoute)
     }
 
@@ -210,24 +210,24 @@ class KNNaviView : AppCompatActivity(),
         aRoutes: List<KNRoute>,
         aMultiRouteInfo: KNMultiRouteInfo?
     ) {
-        showMethodInfo("guidanceDidUpdateRoutes")
+        //showMethodInfo("guidanceDidUpdateRoutes")
 
         binding.naviView.guidanceDidUpdateRoutes(aGuidance, aRoutes, aMultiRouteInfo)
     }
 
 
     override fun guidanceGuideEnded(aGuidance: KNGuidance) {
-        showMethodInfo("guidanceGuideEnded")
+        //showMethodInfo("guidanceGuideEnded")
         binding.naviView.guidanceGuideEnded(aGuidance)
     }
 
     override fun guidanceGuideStarted(aGuidance: KNGuidance) {
-        showMethodInfo("guidanceGuideStarted")
+        //showMethodInfo("guidanceGuideStarted")
         binding.naviView.guidanceGuideStarted(aGuidance)
     }
 
     override fun guidanceOutOfRoute(aGuidance: KNGuidance) {
-        showMethodInfo("guidanceOutOfRoute")
+        //showMethodInfo("guidanceOutOfRoute")
         binding.naviView.guidanceOutOfRoute(aGuidance)
     }
 
@@ -239,19 +239,19 @@ class KNNaviView : AppCompatActivity(),
         aToLocation: KNLocation,
         aChangeReason: KNGuideRouteChangeReason
     ) {
-        showMethodInfo("guidanceRouteChanged")
+        //showMethodInfo("guidanceRouteChanged")
 
         binding.naviView.guidanceRouteChanged(aGuidance)
     }
 
     override fun guidanceRouteUnchanged(aGuidance: KNGuidance) {
-        showMethodInfo("guidanceRouteUnchanged")
+        //showMethodInfo("guidanceRouteUnchanged")
 
         binding.naviView.guidanceRouteUnchanged(aGuidance)
     }
 
     override fun guidanceRouteUnchangedWithError(aGuidnace: KNGuidance, aError: KNError) {
-        showMethodInfo("guidanceRouteUnchangedWithError")
+        //showMethodInfo("guidanceRouteUnchangedWithError")
 
         binding.naviView.guidanceRouteUnchangedWithError(aGuidnace, aError)
     }
@@ -260,7 +260,7 @@ class KNNaviView : AppCompatActivity(),
         aGuidance: KNGuidance,
         aLocationGuide: KNGuide_Location
     ) {
-        showMethodInfo("guidanceDidUpdateLocation")
+        //showMethodInfo("guidanceDidUpdateLocation")
         
         Log.v(TAG, "value 1 is ... ${aGuidance.locationGuide?.gpsOrigin}")
         Log.v(TAG, "value 2 is ... ${aGuidance.locationGuide?.gpsMatched}")
@@ -277,7 +277,7 @@ class KNNaviView : AppCompatActivity(),
     }
 
     override fun guidanceDidUpdateRouteGuide(aGuidance: KNGuidance, aRouteGuide: KNGuide_Route) {
-        showMethodInfo("guidanceDidUpdateRouteGuide")
+        //showMethodInfo("guidanceDidUpdateRouteGuide")
 
         binding.naviView.guidanceDidUpdateRouteGuide(aGuidance, aRouteGuide)
     }
@@ -293,15 +293,14 @@ class KNNaviView : AppCompatActivity(),
 
     override fun guidanceDidUpdateSafetyGuide(
         aGuidance: KNGuidance,
-        aSafetyGuide: KNGuide_Safety?
+        aSafetyGuide:  KNGuide_Safety?
     ) {
-        showMethodInfo("guidanceDidUpdateSafetyGuide")
-
+        //showMethodInfo("guidanceDidUpdateSafetyGuide")
         binding.naviView.guidanceDidUpdateSafetyGuide(aGuidance, aSafetyGuide)
     }
 
     override fun didFinishPlayVoiceGuide(aGuidance: KNGuidance, aVoiceGuide: KNGuide_Voice) {
-        showMethodInfo("didFinishPlayVoiceGuide")
+        //showMethodInfo("didFinishPlayVoiceGuide")
 
         binding.naviView.didFinishPlayVoiceGuide(aGuidance, aVoiceGuide)
     }
@@ -311,21 +310,21 @@ class KNNaviView : AppCompatActivity(),
         aVoiceGuide: KNGuide_Voice,
         aNewData: MutableList<ByteArray>
     ): Boolean {
-        showMethodInfo("shouldPlayVoiceGuide")
+        //showMethodInfo("shouldPlayVoiceGuide")
 
         return binding.naviView.shouldPlayVoiceGuide(aGuidance, aVoiceGuide, aNewData)
     }
 
     override fun willPlayVoiceGuide(aGuidance: KNGuidance, aVoiceGuide: KNGuide_Voice) {
-        showMethodInfo("willPlayVoiceGuide")
+        //showMethodInfo("willPlayVoiceGuide")
 
-        binding.naviView.willPlayVoiceGuide(aGuidance, aVoiceGuide)
+        //binding.naviView.willPlayVoiceGuide(aGuidance, aVoiceGuide)
     }
 
     override fun didUpdateCitsGuide(aGuidance: KNGuidance, aCitsGuide: KNGuide_Cits) {
         showMethodInfo("didUpdateCitsGuide")
 
-        binding.naviView.didUpdateCitsGuide(aGuidance, aCitsGuide)
+        //binding.naviView.didUpdateCitsGuide(aGuidance, aCitsGuide)
     }
 
     private fun showMethodInfo(methodName : String) {

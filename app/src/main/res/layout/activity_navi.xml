@@ -75,17 +75,47 @@
         app:layout_constraintBottom_toBottomOf="@+id/map_view"
         app:layout_constraintEnd_toStartOf="@+id/setting" />
 
-    <TextView
-        android:id="@+id/infoText"
+    <LinearLayout
+        android:id="@+id/infoLayout"
+        android:visibility="gone"
+        android:orientation="vertical"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="각종정보들을 여기다가 표현합니다다다다"
-        android:layout_marginTop="10dp"
-        android:layout_marginEnd="10dp"
-        android:textStyle="bold"
-        android:visibility="gone"
-        android:textColor="@color/purple_700"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/currentSpeed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="10dp"
+            android:text="각종정보들을 여기다가 표현합니다다다다"
+            android:textColor="@color/purple_700"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/knSafetyCode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="10dp"
+            android:text="안전 운행 데이터 코드(콜백에서 아무값도 못받음)"
+            android:textColor="@color/purple_700"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/trafficSpd"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="10dp"
+            android:text="경로 내 현재 위치한 도로의 주행 속도 정보(단위: km/h)"
+            android:textColor="@color/purple_700"
+            android:textStyle="bold"/>
+
+    </LinearLayout>
+
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
