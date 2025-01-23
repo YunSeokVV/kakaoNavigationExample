@@ -61,7 +61,7 @@ class NaviActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityNaviBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
+        userTBTIcon = BitmapFactory.decodeResource(resources, R.drawable.unpowered_navigation)
         FindLoadApplication.knsdk.isShowBuilding = true
 
         initMapView(binding.mapView)
@@ -186,8 +186,6 @@ class NaviActivity : AppCompatActivity() {
                 binding.mapView.userLocation?.apply {
                     isVisible = true
                     isVisibleGuideLine = true
-                    // 사용자 위치가 표시되는 카텍(KATEC) 좌표
-                    //coordinate = currentGPSData.toFloatPoint()
                 }
                     // icon 속성을 없애면 기본TBT로 설정됨. GPS정보를 찾을 수 없을때 회색 TBT아이콘을 설정할 방법이 KNMapView에는 현재 존재하지 않음. 아래 데브톡에서 문의중.
                     //https://devtalk.kakao.com/t/knsdk-tbt/142014
@@ -306,16 +304,6 @@ class NaviActivity : AppCompatActivity() {
             setCameraCurrentLocation()
             requestRoute()
         }
-    }
-
-    // 사용자의 현재 위치를 찍어주는 마커인 TBT위치를 설정해준다.
-    private fun setTBT(aGpsData : KNGPSData?) {
-        var currentLocWGS = aGpsData?.pos?.let { KATECToWGS84(it.x, aGpsData.pos.y) }
-        val currentLocKATEC = currentLocWGS?.let { WGS84ToKATEC(it.x ,currentLocWGS.y) }
-
-
-        val bearing = aGpsData?.angle ?: 0
-        rotate(bearing, aGpsData)
     }
 
     fun requestRoute() {
@@ -630,9 +618,8 @@ class NaviActivity : AppCompatActivity() {
         FindLoadApplication.knsdk.requestLocationUpdate(delegate = object : KNGPSReceiver {
             override fun didReceiveGpsData(aGpsData: KNGPSData)     {
                 cullingRouteWithMapView()
-
                 viewModel.setCurrentSpeed(aGpsData.speed.toString())
-
+                // 공식문서에 따르면 경로의 정체에 따라 색상을 다르게 표현해줘야 하는데 안먹힌다. 데브톡에서는 현재 1.10.5 에는 해당 기능을 제공해주지 않는다고 한다.
                 binding.mapView.routeProperties?.theme = KNMapRouteTheme.trafficDay()
                 if(viewModel.userPOV.value == 3) {
                     // 현재 사용자가 3인칭 시점인 경우
@@ -652,32 +639,19 @@ class NaviActivity : AppCompatActivity() {
                     Log.v(TAG, "bearing ${binding.mapView.bearing}")
                 } else if(viewModel.userPOV.value == 1) {
                     // 현재 사용자가 1인칭 시점인 경우
-                    var currentLocWGS = KATECToWGS84(aGpsData.pos.x, aGpsData.pos.y)
-                    Log.v(TAG, "aGpsData.angle.toFloat() ${aGpsData.angle.toFloat()}")
-                    setTBT(FindLoadApplication.knsdk.sharedGuidance()?.locationGuide?.gpsMatched)
+                    val knGPSData = FindLoadApplication.knsdk.sharedGuidance()?.locationGuide?.gpsMatched
+                    val bearing = knGPSData?.angle ?: 0
+                    followCamerPOV(bearing, knGPSData)
                 }
             }
         })
     }
 
-    private fun rotate(bearing : Int, aGpsData : KNGPSData?) {
+    private fun followCamerPOV(bearing : Int, aGpsData : KNGPSData?) {
         var currentLocWGS = aGpsData?.pos?.let { KATECToWGS84(it.x, aGpsData.pos.y) }
         val currentLocKATEC = currentLocWGS?.let { WGS84ToKATEC(it.x ,currentLocWGS.y) }
-        //Log.v(TAG, "rotated bearing is ${bearing.toString()}")
         if (currentLocKATEC != null) {
-            //binding.mapView.animateCamera(KNMapCameraUpdate.bearingTo(bearing.toFloat()), 500, true, false)
             binding.mapView.animateCamera(KNMapCameraUpdate.bearingTo(bearing.toFloat()).targetTo(currentLocKATEC.toFloatPoint()), 500, true, false)
         }
     }
-
-    fun copyRawResourceToInternalStorage(context: Context, rawResId: Int, fileName: String) {
-        val inputStream = context.resources.openRawResource(rawResId) // raw 리소스 읽기
-        val outFile = File(context.filesDir, fileName) // 내부 저장소에 저장
-        val outputStream = FileOutputStream(outFile)
-
-        inputStream.copyTo(outputStream) // 데이터 복사
-        inputStream.close()
-        outputStream.close()
-    }
-
 }
