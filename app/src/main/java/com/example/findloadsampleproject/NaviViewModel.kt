@@ -22,10 +22,26 @@ class NaviViewModel @Inject constructor() : ViewModel() {
     private var _roadType = MutableLiveData<String>()
     val roadType : LiveData<String> = _roadType
 
+    // 현재 사용자의 시점이 1인칭인지 3인칭인지 판별해주는 변수
+    private var _userPOV = MutableLiveData<Int>(1)
+    val userPOV :LiveData<Int>  = _userPOV
+
+    // 현재 시스템의 각종 정보를 표현해주기 위한 문자열
+    var _currentSpeed = MutableLiveData<String>()
+    val currentSpeed : LiveData<String> = _currentSpeed
+
     // https://developers.kakaomobility.com/docs/android-ref-kotlin/class-KNMapView/
     //범위는 서버 설정에 따라 0.1에서 9999.0까지 지정할 수 있으며 이 범위를 벗어나는 설정은 무시됩니다.
     private var _currentZoom = MutableLiveData<Float>(2.5f)
     val currentZoom : LiveData<Float> = _currentZoom
+
+    fun setCurrentSpeed(currentSpeed : String) {
+        _currentSpeed.value = currentSpeed
+    }
+
+    fun setUserPOV(viewPoint : Int) {
+        _userPOV.value = viewPoint
+    }
 
     fun setZoom(zoom: Float) {
         _currentZoom.value = zoom
