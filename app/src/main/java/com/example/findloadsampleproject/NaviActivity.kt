@@ -1,36 +1,26 @@
 package com.example.findloadsampleproject
 
 import android.content.Context
-import android.location.Location
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import android.view.View
 import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Observer
 import com.example.findloadsampleproject.databinding.ActivityNaviBinding
-import com.kakaomobility.knsdk.KNCarFuel
-import com.kakaomobility.knsdk.KNCarType
-import com.kakaomobility.knsdk.KNCarUsage
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import androidx.activity.viewModels
-import java.io.File
 import com.kakaomobility.knsdk.KNRouteAvoidOption
 import com.kakaomobility.knsdk.KNRoutePriority
 import com.kakaomobility.knsdk.KNSDK
 import com.kakaomobility.knsdk.common.gps.KATECToWGS84
 import com.kakaomobility.knsdk.common.gps.KNGPSData
 import com.kakaomobility.knsdk.common.gps.KNGPSReceiver
-import com.kakaomobility.knsdk.common.gps.KNLocationReceiver
 import com.kakaomobility.knsdk.common.gps.WGS84ToKATEC
 import com.kakaomobility.knsdk.common.objects.KNError
 import com.kakaomobility.knsdk.common.objects.KNPOI
-import com.kakaomobility.knsdk.common.util.DoublePoint
 import com.kakaomobility.knsdk.common.util.FloatPoint
 import com.kakaomobility.knsdk.common.util.IntPoint
 import com.kakaomobility.knsdk.guidance.knguidance.KNGuidance
@@ -42,45 +32,27 @@ import com.kakaomobility.knsdk.guidance.knguidance.KNGuidance_SafetyGuideDelegat
 import com.kakaomobility.knsdk.guidance.knguidance.KNGuidance_VoiceGuideDelegate
 import com.kakaomobility.knsdk.guidance.knguidance.KNGuideRouteChangeReason
 import com.kakaomobility.knsdk.guidance.knguidance.citsguide.KNGuide_Cits
-import com.kakaomobility.knsdk.guidance.knguidance.KNDriveGuidance
 import com.kakaomobility.knsdk.guidance.knguidance.common.KNLocation
 import com.kakaomobility.knsdk.guidance.knguidance.locationguide.KNGuide_Location
 import com.kakaomobility.knsdk.guidance.knguidance.routeguide.KNGuide_Route
 import com.kakaomobility.knsdk.guidance.knguidance.routeguide.objects.KNMultiRouteInfo
-import com.kakaomobility.knsdk.guidance.knguidance.routeguide.objects.KNRoadInfo
 import com.kakaomobility.knsdk.guidance.knguidance.safetyguide.KNGuide_Safety
 import com.kakaomobility.knsdk.guidance.knguidance.safetyguide.objects.KNSafety
 import com.kakaomobility.knsdk.guidance.knguidance.voiceguide.KNGuide_Voice
-import com.kakaomobility.knsdk.guidance.knguidance.voiceguide.KNVoiceCode
-import com.kakaomobility.knsdk.guidance.knguidance.voiceguide.KNVoiceDist
-import com.kakaomobility.knsdk.map.knmapimage.KNMapImage
 import com.kakaomobility.knsdk.map.knmaprenderer.objects.KNMapCameraUpdate
 import com.kakaomobility.knsdk.map.knmapview.KNMapView
-import com.kakaomobility.knsdk.map.knmapview.idl.KNMapRouteEventListener
 import com.kakaomobility.knsdk.map.knmapview.idl.KNMapViewEventListener
-import com.kakaomobility.knsdk.map.knmapview.idl.KNMarkerEventListener
-import com.kakaomobility.knsdk.map.uicustomsupport.renewal.KNMapMarker
 import com.kakaomobility.knsdk.map.uicustomsupport.renewal.theme.base.KNMapRouteTheme
-import com.kakaomobility.knsdk.map.uicustomsupport.renewal.theme.base.KNMapTheme
-import com.kakaomobility.knsdk.map.uicustomsupport.renewal.theme.base.entity.KNRouteColors
-import com.kakaomobility.knsdk.trip.knrouteconfiguration.KNRouteConfiguration
 import com.kakaomobility.knsdk.trip.kntrip.knroute.KNRoute
+import java.io.File
 import java.io.FileOutputStream
 
 class NaviActivity : AppCompatActivity() {
-    // 현재 사용자의 시점이 1인칭인지 3인칭인지 판별해주는 변수
-    var _userPOV = MutableLiveData<Int>(1)
-    val userPOV :LiveData<Int>  = _userPOV
     val viewModel by viewModels<NaviViewModel>()
-
     lateinit var userTBTIcon : Bitmap
 
     // 각종 시스템 정보를 표현할지 여부
     var infoVisibility = false
-
-    // 현재 시스템의 각종 정보를 표현해주기 위한 문자열
-    var _currentSpeed = MutableLiveData<String>()
-    val currentSpeed : LiveData<String> = _currentSpeed
 
     val TAG = "NaviActivity"
     private lateinit var binding : ActivityNaviBinding
@@ -94,15 +66,13 @@ class NaviActivity : AppCompatActivity() {
 
         initMapView(binding.mapView)
 
-        binding.mapView.userLocation?.icon
-
         binding.setting.setOnClickListener {
             val dialog = SettingDialog(binding.mapView, this)
             dialog.show()
         }
 
         initMapEventListener()
-        userPOV.observe(this, { POV ->
+        viewModel.userPOV.observe(this, { POV ->
             binding.userPOV.setText("${POV}인칭 시점")
             if(POV == 1) {
                 // 1인칭 시점인 경우
@@ -115,8 +85,8 @@ class NaviActivity : AppCompatActivity() {
             }
         })
 
-        currentSpeed.observe(this, { speed ->
-            binding.currentSpeed.setText("현재 속도 :${currentSpeed.value}")
+        viewModel.currentSpeed.observe(this, { speed ->
+            binding.currentSpeed.setText("현재 속도 :${viewModel.currentSpeed.value}")
 
         })
 
@@ -138,7 +108,7 @@ class NaviActivity : AppCompatActivity() {
 
         // 1인칭 시점으로 다시 전환
         binding.btnCurrentLocation.setOnClickListener {
-            _userPOV.value = 1
+            viewModel.setUserPOV(1)
         }
 
         // 줌인
@@ -212,6 +182,7 @@ class NaviActivity : AppCompatActivity() {
                 mapView: KNMapView?,
                 cameraUpdate: KNMapCameraUpdate?
             ) {
+                // 카메라를 비추는 화면이 끊기지 않고 부드럽게 움직이려면 코드가 이 메소드안에 있어야 한다.
                 binding.mapView.userLocation?.apply {
                     isVisible = true
                     isVisibleGuideLine = true
@@ -247,7 +218,7 @@ class NaviActivity : AppCompatActivity() {
                 coordinate: FloatPoint
             ) {
                 // 현재 시점을 3인칭으로 바꿈
-                _userPOV.value = 3
+                viewModel.setUserPOV(3)
                 Log.v(TAG, "onPanningChanging called")
             }
 
@@ -293,8 +264,7 @@ class NaviActivity : AppCompatActivity() {
                 zoom: Float
             ) {
                 // 현재 시점을 3인칭으로 바꿈
-                _userPOV.value = 3
-                //currentZoom = zoom
+                viewModel.setUserPOV(3)
                 viewModel.setZoom(zoom)
             }
 
@@ -661,10 +631,10 @@ class NaviActivity : AppCompatActivity() {
             override fun didReceiveGpsData(aGpsData: KNGPSData)     {
                 cullingRouteWithMapView()
 
-                _currentSpeed.value = aGpsData.speed.toString()
+                viewModel.setCurrentSpeed(aGpsData.speed.toString())
 
                 binding.mapView.routeProperties?.theme = KNMapRouteTheme.trafficDay()
-                if(userPOV.value == 3) {
+                if(viewModel.userPOV.value == 3) {
                     // 현재 사용자가 3인칭 시점인 경우
                     val matchedGPS = FindLoadApplication.knsdk.sharedGuidance()?.locationGuide?.gpsMatched
                     if (matchedGPS != null) {
@@ -680,7 +650,7 @@ class NaviActivity : AppCompatActivity() {
                     }
 
                     Log.v(TAG, "bearing ${binding.mapView.bearing}")
-                } else if(userPOV.value == 1) {
+                } else if(viewModel.userPOV.value == 1) {
                     // 현재 사용자가 1인칭 시점인 경우
                     var currentLocWGS = KATECToWGS84(aGpsData.pos.x, aGpsData.pos.y)
                     Log.v(TAG, "aGpsData.angle.toFloat() ${aGpsData.angle.toFloat()}")
