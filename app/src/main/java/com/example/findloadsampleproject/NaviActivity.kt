@@ -105,10 +105,12 @@ class NaviActivity : AppCompatActivity() {
         // 1인칭 시점으로 다시 전환
         binding.btnCurrentLocation.setOnClickListener {
             viewModel.setUserPOV(1)
+            viewModel.initalizeCurrentZoom()
         }
 
-        viewModel.currentZoom.observe(this, Observer { it ->
-            binding.currentZoom.text = "현재 배율 "+it.toString()
+        viewModel.currentZoom.observe(this, Observer { currentZoom ->
+            binding.currentZoom.text = "현재 배율 "+currentZoom.toString()
+            KNMapCameraUpdate.zoomTo(currentZoom)
         })
 
 

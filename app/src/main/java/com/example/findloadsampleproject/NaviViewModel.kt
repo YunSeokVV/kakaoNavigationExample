@@ -27,7 +27,7 @@ class NaviViewModel @Inject constructor() : ViewModel() {
     val userPOV :LiveData<Int>  = _userPOV
 
     // 현재 시스템의 각종 정보를 표현해주기 위한 문자열
-    var _currentSpeed = MutableLiveData<String>()
+    private var _currentSpeed = MutableLiveData<String>()
     val currentSpeed : LiveData<String> = _currentSpeed
 
     // https://developers.kakaomobility.com/docs/android-ref-kotlin/class-KNMapView/
@@ -116,6 +116,10 @@ class NaviViewModel @Inject constructor() : ViewModel() {
             "KNSafetyCode_SignalAndSpeedViolationBackwardCamera" -> return "후면 신호 및 과속 단속 카메라"
             else -> return "code is ${safetyCode}"
         }
+    }
+
+    fun initalizeCurrentZoom() {
+        _currentZoom.value = 2.5f
     }
 
     fun convertKNRoadType(knRoadType: KNRoadType) : String{
