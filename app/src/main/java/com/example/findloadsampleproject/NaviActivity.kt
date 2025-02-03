@@ -1,6 +1,5 @@
 package com.example.findloadsampleproject
 
-import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Bundle
@@ -9,8 +8,7 @@ import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
 import com.example.findloadsampleproject.databinding.ActivityNaviBinding
 import com.kakaomobility.knsdk.KNRouteAvoidOption
 import com.kakaomobility.knsdk.KNRoutePriority
@@ -44,8 +42,7 @@ import com.kakaomobility.knsdk.map.knmapview.KNMapView
 import com.kakaomobility.knsdk.map.knmapview.idl.KNMapViewEventListener
 import com.kakaomobility.knsdk.map.uicustomsupport.renewal.theme.base.KNMapRouteTheme
 import com.kakaomobility.knsdk.trip.kntrip.knroute.KNRoute
-import java.io.File
-import java.io.FileOutputStream
+
 
 class NaviActivity : AppCompatActivity() {
     val viewModel by viewModels<NaviViewModel>()
@@ -87,7 +84,6 @@ class NaviActivity : AppCompatActivity() {
 
         viewModel.currentSpeed.observe(this, { speed ->
             binding.currentSpeed.setText("현재 속도 :${viewModel.currentSpeed.value}")
-
         })
 
         viewModel.currentSafetyCode.observe(this, { info ->
@@ -110,6 +106,11 @@ class NaviActivity : AppCompatActivity() {
         binding.btnCurrentLocation.setOnClickListener {
             viewModel.setUserPOV(1)
         }
+
+        viewModel.currentZoom.observe(this, Observer { it ->
+            binding.currentZoom.text = "현재 배율 "+it.toString()
+        })
+
 
         // 줌인
         binding.zoomIn.setOnClickListener {

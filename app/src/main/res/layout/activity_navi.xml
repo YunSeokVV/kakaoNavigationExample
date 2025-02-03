@@ -134,6 +134,16 @@
             android:textColor="@color/purple_700"
             android:textStyle="bold"/>
 
+        <TextView
+            android:id="@+id/currentZoom"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="10dp"
+            android:text="현재 배율"
+            android:textColor="@color/purple_700"
+            android:textStyle="bold"/>
+
     </LinearLayout>
 
 
