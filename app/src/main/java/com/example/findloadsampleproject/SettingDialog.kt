@@ -2,6 +2,7 @@ package com.example.findloadsampleproject
 
 import android.app.Dialog
 import android.content.Context
+import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -96,7 +97,11 @@ class SettingDialog(private val mapView : KNMapView, context : Context) : Dialog
 
         //미성옥
         val pos3 = WGS84ToKATEC(127.097505, 37.334529)
-        val marker3 = KNMapMarker(pos3.toFloatPoint())
+        var miseongokImg = BitmapFactory.decodeResource(context.resources, R.drawable.miseongok)
+        val marker3 = KNMapMarker(pos3.toFloatPoint()).also {
+            it.icon = miseongokImg
+        }
+
 
         // 경유지들을 모아놓은 리스트
         val knMapMarkerList = listOf<KNMapMarker>(marker1, marker2, marker3)
