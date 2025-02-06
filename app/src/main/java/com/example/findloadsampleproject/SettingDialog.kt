@@ -18,6 +18,7 @@ import com.kakaomobility.knsdk.common.gps.WGS84ToKATEC
 import com.kakaomobility.knsdk.common.objects.KNPOI
 import com.kakaomobility.knsdk.map.knmaprenderer.objects.KNMapCameraUpdate
 import com.kakaomobility.knsdk.map.knmapview.KNMapView
+import com.kakaomobility.knsdk.map.uicustomsupport.renewal.KNMapMarker
 import com.kakaomobility.knsdk.map.uicustomsupport.renewal.theme.base.KNMapRouteTheme
 import com.kakaomobility.knsdk.map.uicustomsupport.renewal.theme.base.KNMapTheme
 import com.kakaomobility.knsdk.trip.knrouteconfiguration.KNRouteConfiguration
@@ -63,10 +64,44 @@ class SettingDialog(private val mapView : KNMapView, context : Context) : Dialog
             }
         }
 
+        binding.addVia.setOnCheckedChangeListener { compoundButton, addVia ->
+            if(addVia) {
+                // 경유지 추가
+                addMarkers()
+            } else {
+                // 모든 마커를 제거
+                mapView.removeMarkersAll()
+
+//                // 아래 코드처럼 하나의 마커를 설정해서 경유지 하나만 제거하는것도 가능! 미성옥이 사라진다
+//                val pos1 = WGS84ToKATEC(127.097505, 37.334529)
+//                val marker1 = KNMapMarker(pos1.toFloatPoint())
+//                mapView.removeMarker(marker1)
+            }
+        }
+
         binding.mockPlay.setOnClickListener {
             startMockDrive()
         }
 
+    }
+
+    // 다양한 마커를 추가하는 메소드
+    private fun addMarkers(){
+        // 리움 미술관
+        val pos1 = WGS84ToKATEC(126.999373, 37.538438)
+        val marker1 = KNMapMarker(pos1.toFloatPoint())
+        //동천집
+        val pos2 = WGS84ToKATEC(127.100248, 37.331077)
+        val marker2 = KNMapMarker(pos2.toFloatPoint())
+
+        //미성옥
+        val pos3 = WGS84ToKATEC(127.097505, 37.334529)
+        val marker3 = KNMapMarker(pos3.toFloatPoint())
+
+        // 경유지들을 모아놓은 리스트
+        val knMapMarkerList = listOf<KNMapMarker>(marker1, marker2, marker3)
+
+        mapView.addMarkers(knMapMarkerList)
     }
 
 

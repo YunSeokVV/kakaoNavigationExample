@@ -190,7 +190,7 @@ class NaviActivity : AppCompatActivity() {
                     isVisible = true
                     isVisibleGuideLine = true
                 }
-                    // icon 속성을 없애면 기본TBT로 설정됨. GPS정보를 찾을 수 없을때 회색 TBT아이콘을 설정할 방법이 KNMapView에는 현재 존재하지 않음. 아래 데브톡에서 문의중.
+                    // icon 속성을 없애면 기본TBT로 설정됨. GPS정보를 찾을 수 없을때 회색 TBT아이콘을 설정할 방법이 KNMapView에는 현재 존재하지 않음.
                     //https://devtalk.kakao.com/t/knsdk-tbt/142014
                     ?.icon = userTBTIcon
 
@@ -390,9 +390,9 @@ class NaviActivity : AppCompatActivity() {
                                                     // 경로 요청 성공
                                                     else {
                                                         if (routes != null) {
+                                                            // 경로 설정
                                                             binding.mapView.setRoutes(routes.toList())
                                                             binding.mapView.routeProperties?.theme = KNMapRouteTheme.driveDay()
-
                                                         }
                                                     }
 
