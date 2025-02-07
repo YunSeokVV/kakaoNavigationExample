@@ -4,6 +4,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.kakaomobility.knsdk.KNRoadType
+import com.kakaomobility.knsdk.common.gps.WGS84ToKATEC
+import com.kakaomobility.knsdk.common.objects.KNPOI
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
@@ -34,6 +36,12 @@ class NaviViewModel @Inject constructor() : ViewModel() {
     //범위는 서버 설정에 따라 0.1에서 9999.0까지 지정할 수 있으며 이 범위를 벗어나는 설정은 무시됩니다.
     private var _currentZoom = MutableLiveData<Float>(2.5f)
     val currentZoom : LiveData<Float> = _currentZoom
+
+    // 경유지 추가여부를 판단해주는 변수
+    var isAddVias = false
+
+    val pos1 = WGS84ToKATEC(129.039325, 35.114511)
+    val poi = KNPOI("부산역", pos1.x.toInt(),pos1.y.toInt(),"부산역")
 
     fun setCurrentSpeed(currentSpeed : String) {
         _currentSpeed.value = currentSpeed

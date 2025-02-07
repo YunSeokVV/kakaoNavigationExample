@@ -12,6 +12,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.example.findloadsampleproject.databinding.ActivityMainBinding
+import com.kakao.sdk.common.KakaoSdk
 
 import com.kakao.sdk.v2.common.BuildConfig.VERSION_NAME
 import com.kakaomobility.knsdk.KNLanguageType
@@ -104,6 +105,7 @@ class MainActivity : AppCompatActivity() {
                         when (it.code) {
                             KNError_Code_C302 -> {
                                 Log.v(TAG, "code ${it.code}, message ${it.msg} tagMsg : ${it.tagMsg}")
+                                Log.v(TAG,"디버그 키 : ${KakaoSdk.keyHash}")
                             }
 
                             KNError_Code_C103 -> {
