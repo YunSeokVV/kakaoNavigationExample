@@ -8,7 +8,9 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.viewModels
 import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.activityViewModels
 import com.example.findloadsampleproject.databinding.DialogSettingBinding
 import com.kakaomobility.knsdk.KNCarFuel
 import com.kakaomobility.knsdk.KNCarType
@@ -23,15 +25,24 @@ import com.kakaomobility.knsdk.map.uicustomsupport.renewal.KNMapMarker
 import com.kakaomobility.knsdk.map.uicustomsupport.renewal.theme.base.KNMapRouteTheme
 import com.kakaomobility.knsdk.map.uicustomsupport.renewal.theme.base.KNMapTheme
 import com.kakaomobility.knsdk.trip.knrouteconfiguration.KNRouteConfiguration
+import com.kakaomobility.knsdk.trip.kntrip.KNTrip
 
 
-class SettingDialog(private val mapView : KNMapView, context : Context) : Dialog(context) {
+class SettingDialog(private val mapView : KNMapView) : DialogFragment() {
     private lateinit var binding : DialogSettingBinding
+    private val viewModel by activityViewModels<NaviViewModel>()
+
+
     private val TAG = "SettingDialog"
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        binding = DialogSettingBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        binding = DialogSettingBinding.inflate(layoutInflater, container, false)
+        //return super.onCreateView(inflater, container, savedInstanceState)
+
 
         binding.dayNightSettingSwitch.setOnCheckedChangeListener { compoundButton, isNight ->
             if(isNight) {
@@ -65,18 +76,25 @@ class SettingDialog(private val mapView : KNMapView, context : Context) : Dialog
             }
         }
 
-        binding.addVia.setOnCheckedChangeListener { compoundButton, addVia ->
-            if(addVia) {
-                // 경유지 추가
+        binding.addMarker.setOnCheckedChangeListener { compoundButton, addMarker ->
+            if(addMarker) {
+                // 마커 추가
                 addMarkers()
             } else {
                 // 모든 마커를 제거
                 mapView.removeMarkersAll()
+            }
+        }
 
-//                // 아래 코드처럼 하나의 마커를 설정해서 경유지 하나만 제거하는것도 가능! 미성옥이 사라진다
-//                val pos1 = WGS84ToKATEC(127.097505, 37.334529)
-//                val marker1 = KNMapMarker(pos1.toFloatPoint())
-//                mapView.removeMarker(marker1)
+        binding.addVias.setOnCheckedChangeListener { compoundButton, vias ->
+            if(vias) {
+                // 경유지 추가 (부산역)
+                viewModel.isAddVias = true
+
+            } else {
+                // 경유지 제거. 현재 메소드가 제대로 동작하지 않는다. 문의를 남겨놓음.
+                //https://devtalk.kakao.com/t/topic/142389
+                viewModel.isAddVias = false
             }
         }
 
@@ -84,6 +102,7 @@ class SettingDialog(private val mapView : KNMapView, context : Context) : Dialog
             startMockDrive()
         }
 
+        return binding.root
     }
 
     // 다양한 마커를 추가하는 메소드
@@ -95,9 +114,11 @@ class SettingDialog(private val mapView : KNMapView, context : Context) : Dialog
         val pos2 = WGS84ToKATEC(127.100248, 37.331077)
         val marker2 = KNMapMarker(pos2.toFloatPoint())
 
+
         //미성옥
         val pos3 = WGS84ToKATEC(127.097505, 37.334529)
-        var miseongokImg = BitmapFactory.decodeResource(context.resources, R.drawable.miseongok)
+        var miseongokImg = BitmapFactory.decodeResource(requireContext().resources, R.drawable.miseongok)
+        // 마커의 이미지를 임의로 설정하는것도 가능하다
         val marker3 = KNMapMarker(pos3.toFloatPoint()).also {
             it.icon = miseongokImg
         }

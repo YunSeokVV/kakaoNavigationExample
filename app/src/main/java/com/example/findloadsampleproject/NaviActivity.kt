@@ -40,12 +40,14 @@ import com.kakaomobility.knsdk.guidance.knguidance.voiceguide.KNGuide_Voice
 import com.kakaomobility.knsdk.map.knmaprenderer.objects.KNMapCameraUpdate
 import com.kakaomobility.knsdk.map.knmapview.KNMapView
 import com.kakaomobility.knsdk.map.knmapview.idl.KNMapViewEventListener
+import com.kakaomobility.knsdk.map.uicustomsupport.renewal.KNMapMarker
 import com.kakaomobility.knsdk.map.uicustomsupport.renewal.theme.base.KNMapRouteTheme
+import com.kakaomobility.knsdk.trip.kntrip.KNTrip
 import com.kakaomobility.knsdk.trip.kntrip.knroute.KNRoute
 
 
 class NaviActivity : AppCompatActivity() {
-    val viewModel by viewModels<NaviViewModel>()
+    private val viewModel by viewModels<NaviViewModel>()
     lateinit var userTBTIcon : Bitmap
 
     // 각종 시스템 정보를 표현할지 여부
@@ -64,8 +66,9 @@ class NaviActivity : AppCompatActivity() {
         initMapView(binding.mapView)
 
         binding.setting.setOnClickListener {
-            val dialog = SettingDialog(binding.mapView, this)
-            dialog.show()
+            //val dialog = SettingDialog(binding.mapView, this)
+            //dialog.show()
+            SettingDialog(binding.mapView).show(supportFragmentManager, "SampleDialog")
         }
 
         initMapEventListener()
@@ -392,7 +395,12 @@ class NaviActivity : AppCompatActivity() {
                                                         if (routes != null) {
                                                             // 경로 설정
                                                             binding.mapView.setRoutes(routes.toList())
-                                                            binding.mapView.routeProperties?.theme = KNMapRouteTheme.driveDay()
+                                                            //binding.mapView.routeProperties?.theme = KNMapRouteTheme.driveDay()
+
+
+
+
+
                                                         }
                                                     }
 
@@ -487,6 +495,20 @@ class NaviActivity : AppCompatActivity() {
                                             } ?: "값이 없음"
 
                                             viewModel.setCurrentRoadType(roadType)
+
+                                            if(viewModel.isAddVias) {
+                                                // 경유지가 추가된 경우
+                                                // 예제 경유지는 부산역이다. 경유지가 추가되는데는 어느정도 딜레이 시간이 존재한다.
+                                                aGuidance.trip?.addVia(viewModel.poi, 0)
+                                            } else {
+                                                // 모든 경유지 삭제
+                                                aGuidance.trip?.addVia(viewModel.poi, 0)
+                                                // 바로 경유지 삭제가 되지 않는다. 어느정도 지연시간이 있다.
+                                                aGuidance.trip?.removeAllVias()
+
+                                                // 특정 경유지 삭제
+                                                //aGuidance.trip?.removeViaAtIdx(0)
+                                            }
 
                                         }
 
@@ -639,7 +661,7 @@ class NaviActivity : AppCompatActivity() {
                         }
                     }
 
-                    Log.v(TAG, "bearing ${binding.mapView.bearing}")
+                    //Log.v(TAG, "bearing ${binding.mapView.bearing}")
                 } else if(viewModel.userPOV.value == 1) {
                     // 현재 사용자가 1인칭 시점인 경우
                     val knGPSData = FindLoadApplication.knsdk.sharedGuidance()?.locationGuide?.gpsMatched
@@ -656,5 +678,14 @@ class NaviActivity : AppCompatActivity() {
         if (currentLocKATEC != null) {
             binding.mapView.animateCamera(KNMapCameraUpdate.bearingTo(bearing.toFloat()).targetTo(currentLocKATEC.toFloatPoint()), 500, true, false)
         }
+    }
+
+    // 추가 경유지 설정
+    private fun addVia(trip : KNTrip) {
+        // 리움 미술관
+        val pos1 = WGS84ToKATEC(126.999373, 37.538438)
+        val poi = KNPOI("리움", pos1.x.toInt(),pos1.y.toInt(),"리움")
+        //val marker1 = KNMapMarker(pos1.toFloatPoint())
+        trip.addVia(poi,0)
     }
 }
