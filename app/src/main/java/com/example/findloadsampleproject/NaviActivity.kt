@@ -34,6 +34,7 @@ import com.kakaomobility.knsdk.guidance.knguidance.common.KNLocation
 import com.kakaomobility.knsdk.guidance.knguidance.locationguide.KNGuide_Location
 import com.kakaomobility.knsdk.guidance.knguidance.routeguide.KNGuide_Route
 import com.kakaomobility.knsdk.guidance.knguidance.routeguide.objects.KNMultiRouteInfo
+import com.kakaomobility.knsdk.guidance.knguidance.routeguide.objects.KNRoadInfo_Road
 import com.kakaomobility.knsdk.guidance.knguidance.safetyguide.KNGuide_Safety
 import com.kakaomobility.knsdk.guidance.knguidance.safetyguide.objects.KNSafety
 import com.kakaomobility.knsdk.guidance.knguidance.voiceguide.KNGuide_Voice
@@ -346,7 +347,9 @@ class NaviActivity : AppCompatActivity() {
                         // 경로 요청 성공
                         else {
                             Log.v(TAG,"routes is ${routes}")
-
+                            routes?.map { route ->
+                                route.routeSource
+                            }
                             if (routes != null) {
                                 //binding.mapView.setRoutes(routes.toList())
 
@@ -395,12 +398,6 @@ class NaviActivity : AppCompatActivity() {
                                                         if (routes != null) {
                                                             // 경로 설정
                                                             binding.mapView.setRoutes(routes.toList())
-                                                            //binding.mapView.routeProperties?.theme = KNMapRouteTheme.driveDay()
-
-
-
-
-
                                                         }
                                                     }
 
@@ -498,16 +495,24 @@ class NaviActivity : AppCompatActivity() {
 
                                             if(viewModel.isAddVias) {
                                                 // 경유지가 추가된 경우
-                                                // 예제 경유지는 부산역이다. 경유지가 추가되는데는 어느정도 딜레이 시간이 존재한다.
-                                                aGuidance.trip?.addVia(viewModel.poi, 0)
+                                                if(aGuidance.trip?.vias == null) {
+                                                    // 경유지 추가 코드가 중복되서는 안된다. 비동기 처리이기 때문에 중복 호출되면 앱이 느려진다.
+                                                    // 예제 경유지는 부산역이다. 경유지가 추가되는데는 어느정도 딜레이 시간이 존재한다.
+                                                    aGuidance.trip?.addVia(viewModel.poi, 0)
+                                                }
+
                                             } else {
                                                 // 모든 경유지 삭제
-                                                aGuidance.trip?.addVia(viewModel.poi, 0)
-                                                // 바로 경유지 삭제가 되지 않는다. 어느정도 지연시간이 있다.
-                                                aGuidance.trip?.removeAllVias()
+                                                //aGuidance.trip?.addVia(viewModel.poi, 0)
 
-                                                // 특정 경유지 삭제
-                                                //aGuidance.trip?.removeViaAtIdx(0)
+                                                if(aGuidance.trip?.vias?.size != 0) {
+                                                    // 경유지 삭제 메소드를 호출하면 아마 비동기작업이 일어나는 것 같다. 계속 호출하면 TBT동작이 느려진다. 그리고 경로안내를 계속 새로 실행한다.
+                                                    // 바로 경유지 삭제가 되지 않는다. 어느정도 지연시간이 있다.
+                                                    aGuidance.trip?.removeAllVias()
+
+                                                    // 특정 경유지 삭제
+                                                    //aGuidance.trip?.removeViaAtIdx(0)
+                                                }
                                             }
 
                                         }
