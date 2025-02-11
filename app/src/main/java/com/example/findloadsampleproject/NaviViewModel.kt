@@ -59,7 +59,7 @@ class NaviViewModel @Inject constructor() : ViewModel() {
         if(_currentZoom.value!! > 9999) {
             return
         }
-        _currentZoom.value = _currentZoom.value!! + 0.5f
+        _currentZoom.value = _currentZoom.value!! + 1.5f
     }
 
     fun zoomIn() {
@@ -67,7 +67,7 @@ class NaviViewModel @Inject constructor() : ViewModel() {
             return
         }
 
-        _currentZoom.value = _currentZoom.value!! - 0.5f
+        _currentZoom.value = _currentZoom.value!! - 1.5f
     }
 
     fun convertSafetyCode(safetyCode : String) : String{
