@@ -35,6 +35,7 @@ import com.kakaomobility.knsdk.guidance.knguidance.routeguide.KNGuide_Route
 import com.kakaomobility.knsdk.guidance.knguidance.routeguide.objects.KNMultiRouteInfo
 import com.kakaomobility.knsdk.guidance.knguidance.safetyguide.KNGuide_Safety
 import com.kakaomobility.knsdk.guidance.knguidance.safetyguide.objects.KNSafety
+import com.kakaomobility.knsdk.guidance.knguidance.safetyguide.objects.KNSafety_Camera
 import com.kakaomobility.knsdk.guidance.knguidance.voiceguide.KNGuide_Voice
 import com.kakaomobility.knsdk.trip.knrouteconfiguration.KNRouteConfiguration
 import com.kakaomobility.knsdk.trip.kntrip.KNTrip
@@ -261,7 +262,9 @@ class KNNaviView : AppCompatActivity(),
         aLocationGuide: KNGuide_Location
     ) {
         //showMethodInfo("guidanceDidUpdateLocation")
-        
+
+
+
         Log.v(TAG, "value 1 is ... ${aGuidance.locationGuide?.gpsOrigin}")
         Log.v(TAG, "value 2 is ... ${aGuidance.locationGuide?.gpsMatched}")
 
@@ -296,8 +299,26 @@ class KNNaviView : AppCompatActivity(),
         aSafetyGuide:  KNGuide_Safety?
     ) {
         //showMethodInfo("guidanceDidUpdateSafetyGuide")
+
+        //KNGuide_Safety(aSafetyGuide?.safetiesOnGuide)
+
+        if (aSafetyGuide != null) {
+            getSpeedLimits(aSafetyGuide)
+        }
+
         binding.naviView.guidanceDidUpdateSafetyGuide(aGuidance, aSafetyGuide)
     }
+
+    // 현재 도로 제한 속도 값을 구하는 메소드
+    fun getSpeedLimits(knGuideSafety: KNGuide_Safety) {
+        knGuideSafety.safetiesOnGuide?.forEach { safety ->
+            val cameraSafety = safety as? KNSafety_Camera
+            cameraSafety?.let {
+                Log.v(TAG, "Spped Limit : ${it.speedLimit}")
+            }
+        }
+    }
+
 
     override fun didFinishPlayVoiceGuide(aGuidance: KNGuidance, aVoiceGuide: KNGuide_Voice) {
         //showMethodInfo("didFinishPlayVoiceGuide")
